@@ -2,7 +2,6 @@
 
 import re 
 from collections import namedtuple
-from mathutils import Vector
 Mode = namedtuple('Mode', 'freq qpt vectors')
 
 def import_vsim(filename):
@@ -39,15 +38,21 @@ def import_vsim(filename):
             qpt = [float(x) for x in mode_data[0:3]]
             freq = float(mode_data[3])
             vector_list = [float(x) for x in mode_data[4:]]
-            vector_set = [vector_list[6*i:6*i+6] for i in range(len(positions))]
-            complex_vectors = [Vector([complex(x[0],x[3]),
-                               complex(x[1],x[4]),
-                                       complex(x[2],x[5])]) for x in vector_set]
-            vibs.append(Mode(freq, qpt, complex_vectors))
+            vector_set = [vector_list[6*i:6*i+3] for i in range(len(positions))]
+            vibs.append(Mode(freq, qpt, vector_set))
             
     return (cell_vsim, positions, symbols, vibs)
+
+def cell_vsim_to_vectors(cell_vsim):
+    dxx, dyx, dyy = cell_vsim[0]
+    dzx, dzy, dzz = cell_vsim[1]
+    return [[dxx, 0., 0.],
+            [dyx, dyy, 0.],
+            [dzx, dzy, dzz]]
 
 if __name__ == "__main__":
     cell, positions, symbols, vibs = import_vsim('gamma_vibs.ascii')
 
-    print(vibs[0])
+    print(vibs)
+    print(cell_vsim_to_vectors(cell))
+    print(symbols)

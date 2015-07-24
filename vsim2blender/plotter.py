@@ -5,8 +5,8 @@ from mathutils import Vector
 
 # Modify path to import stuff from other file
 script_directory = os.path.dirname(__file__)
-sys.path.insert(0, os.path.abspath(script_directory))
-from ascii_importer import import_vsim cell_vsim_to_vectors
+sys.path.insert(0, os.path.abspath(script_directory)+'/..')
+from vsim2blender.ascii_importer import import_vsim cell_vsim_to_vectors
 
 def draw_bounding_box(cell):
     a, b, c = Vector(cell[0]), Vector(cell[1]), Vector(cell[2])
