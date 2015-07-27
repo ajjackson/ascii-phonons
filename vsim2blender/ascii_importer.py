@@ -18,7 +18,7 @@ def import_vsim(filename):
                 line = line.split()
                 position = [float(x) for x in line[0:3]]
                 symbol = line[3]
-                positions.append(position)
+                positions.append(Vector(position))
                 symbols.append(symbol)
             else:
                 commentlines.append(line.strip())
@@ -40,14 +40,48 @@ def import_vsim(filename):
             freq = float(mode_data[3])
             vector_list = [float(x) for x in mode_data[4:]]
             vector_set = [vector_list[6*i:6*i+6] for i in range(len(positions))]
-            complex_vectors = [Vector([complex(x[0],x[3]),
+            complex_vectors = [[complex(x[0],x[3]),
                                complex(x[1],x[4]),
-                                       complex(x[2],x[5])]) for x in vector_set]
+                                       complex(x[2],x[5])] for x in vector_set]
             vibs.append(Mode(freq, qpt, complex_vectors))
+
+    if _check_if_reduced(filename):
+        positions = _reduced_to_cartesian(positions, cell_vsim)
             
     return (cell_vsim, positions, symbols, vibs)
+
+def _check_if_reduced(filename):
+    """
+    Scan a .ascii file for the "reduced" keyword
+    """
+    with open(filename,'r') as f:
+        f.readline() # Skip header
+        for line in f:
+            if 'reduced' in line:
+                return True
+        else:
+            return False
+
+def _reduced_to_cartesian(positions, cell_vsim):
+    lattice_vectors = cell_vsim_to_vectors(cell_vsim)
+    cartesian_positions = []
+    for position in positions:
+        cartesian_position = Vector((0.,0.,0.))
+        for position_i, vector in zip(position, lattice_vectors):
+            cartesian_position += position_i * vector
+        cartesian_positions.append(cartesian_position)
+    return cartesian_positions
+
+def cell_vsim_to_vectors(cell_vsim):
+    dxx, dyx, dyy = cell_vsim[0]
+    dzx, dzy, dzz = cell_vsim[1]
+    return [Vector([dxx, 0., 0.]),
+            Vector([dyx, dyy, 0.]),
+            Vector([dzx, dzy, dzz])]
 
 if __name__ == "__main__":
     cell, positions, symbols, vibs = import_vsim('gamma_vibs.ascii')
 
-    print(vibs[0])
+    print(vibs)
+    print(cell_vsim_to_vectors(cell))
+    print(symbols)
