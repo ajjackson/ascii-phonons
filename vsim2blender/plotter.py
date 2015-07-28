@@ -1,12 +1,19 @@
 import bpy
-# import os
+import yaml
+import os
+import random
 # import sys
 from mathutils import Vector
+import math
 
 # # Modify path to import stuff from other file
-# script_directory = os.path.dirname(__file__)
+
 # sys.path.insert(0, os.path.abspath(script_directory)+'/..')
 from vsim2blender.ascii_importer import import_vsim, cell_vsim_to_vectors
+
+
+script_directory = os.path.dirname(__file__)
+defaults_table_file = script_directory + '/periodic_table.yaml'
 
 def draw_bounding_box(cell):
     a, b, c = cell
@@ -25,7 +32,27 @@ def draw_bounding_box(cell):
     box_material.diffuse_color=(0,0,0)
     box_material.use_shadeless = True
 
-def add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), scale_factor=1.0, reduced=False):
+def init_material(symbol, col=False, shadeless=True):
+    """
+    Create material if non-existent. Assign a random colour if none is specified.
+
+    Arguments:
+        col: 3-tuple or list containing RGB color. If False, use a random colour.
+        shadeless: Boolean; Enable set_shadeless parameter. Informally known as "lights out".
+    """
+
+    if symbol in bpy.data.materials.keys():
+        return bpy.data.materials[symbol]
+    elif not col:
+        col = (random.random(), random.random(), random.random())
+
+    material = bpy.data.materials.new(name=symbol)
+    material.diffuse_color = col
+    material.use_shadeless = shadeless
+    return material
+
+def add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), scale_factor=1.0, reduced=False,
+             yaml_file=False,periodic_table=False, name=False):
     """
     Add atom to scene
 
@@ -33,10 +60,17 @@ def add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), scale_factor=1.0, 
         position: 3-tuple, list or vector containing atom coordinates. Units same as unit cell unless reduced=True
         lattice_vectors: 3-tuple or list containing Vectors specifying lattice bounding box/repeating unit
         symbol: chemical symbol. Used for colour and size lookup.
-        cell_id: 3-tuple of integers, indexing position of cell in supercell. (0,0,0) is the origin cell. Negative values are ok.
+        cell_id: 3-tuple of integers, indexing position of cell in supercell. (0,0,0) is the
+            origin cell. Negative values are ok.
         scale_factor: master scale factor for atomic spheres
-        reduced: Boolean. If true, positions are taken to be in units of lattice vectors; if false, positions are taken to be Cartesian.
-
+        reduced: Boolean. If true, positions are taken to be in units of lattice vectors;
+            if false, positions are taken to be Cartesian.
+        yaml_file: If False, use colours and sizes from default periodic_table.yaml file.
+            If a string is provided, this is taken to be a YAML file in same format, values clobber defaults.
+        periodic_table: dict containing atomic radii and colours in format
+            {'H':{'r': 0.31, 'col': [0.8, 0.8, 0.8]}, ...}. Takes
+            priority over yaml_file and default table.
+        name: Label for atom object
     """
     if reduced:
         cartesian_position = Vector((0.,0.,0.))
@@ -47,7 +81,46 @@ def add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), scale_factor=1.0, 
         for i, vector in enumerate(lattice_vectors):
             cartesian_position += (cell_id[i] * vector)
 
-    bpy.ops.mesh.primitive_uv_sphere_add(location=cartesian_position, size=scale_factor)
+
+    # Get colour. Priority order is 1. periodic_table dict 2. yaml_file 3. defaults_table
+    if yaml_file:
+        yaml_file_data = yaml.load(open(yaml_file))
+    else:
+        yaml_file_data = False
+
+    defaults_table = yaml.load(open(defaults_table_file))
+
+    if periodic_table and symbol in periodic_table and 'col' in periodic_table[symbol]:
+        col = periodic_table[symbol]['col']
+    elif yaml_file_data and symbol in yaml_file_data and 'col' in yaml_file_data[symbol]:
+        col = yaml_file_data[symbol]['col']
+    else:
+        if symbol in defaults_table and 'col' in defaults_table[symbol]:
+            col = defaults_table[symbol]['col']
+        else:
+            col=False        
+
+    # Get atomic radius. Priority order is 1. periodic_table dict 2. yaml_file 3. defaults_table
+    if periodic_table and symbol in periodic_table and 'r' in periodic_table[symbol]:
+        radius = periodic_table[symbol]['r']
+    elif yaml_file_data and symbol in yaml_file_data and 'r' in yaml_file_data[symbol]:
+        radius = yaml_file_data[symbol]['r']
+    elif symbol in defaults_table and 'r' in defaults_table[symbol]:
+        radius = defaults_table[symbol]['r']
+    else:
+        radius = 1.0
+
+
+    bpy.ops.mesh.primitive_uv_sphere_add(location=cartesian_position, size=radius * scale_factor)
+    atom = bpy.context.object
+    if name:
+        atom.name = name
+
+    material = init_material(symbol, col=col)
+    atom.data.materials.append(material)
+    bpy.ops.object.shade_smooth()
+    
+    return atom
 
 # Computing the positions
 #
@@ -85,12 +158,26 @@ def main(ascii_file=False):
     
     # Draw bounding box #
     draw_bounding_box(lattice_vectors)
-    print(lattice_vectors)
 
     # Draw atoms
-    for relative_position in positions:
-        print(relative_position)
-        add_atom(relative_position,lattice_vectors,'X',cell_id=(0,0,0))
+    for i, (position, symbol) in enumerate(zip(positions, symbols)):
+        add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), name = '{0}_{1}'.format(i,symbol))
+
+
+    # Position camera and render
+
+    camera_loc=( lattice_vectors[0][0]/2., -3 * max((lattice_vectors[0][0], lattice_vectors[2][2])), lattice_vectors[2][2]/2.)
+    bpy.ops.object.camera_add(location=camera_loc,rotation=(math.pi/2,0,0))
+    camera = bpy.context.object
+    bpy.context.scene.camera = camera
+
+    bpy.context.scene.world = bpy.data.worlds['World']
+    bpy.data.worlds['World'].horizon_color = [0.5, 0.5, 0.5]
+
+    bpy.context.scene.render.resolution_x = 1080
+    bpy.context.scene.render.resolution_y = 1080
+    bpy.context.scene.render.resolution_percentage = 50
+    bpy.context.scene.render.use_edge_enhance = True
 
 
 if __name__=="__main__":

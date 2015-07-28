@@ -25,9 +25,11 @@ this is
 
 The target platforms are modern GNU/Linux distributions and Mac OS X. Windows support is seen as faintly desirable, but would impede the initial development process.
 
+## Requirements
 
-[Skelton2015]: http://dx.doi.org/10.1063/1.4917044
-[Brivio2015]: http://arxiv.org/abs/1504.07508
+A recent version of Blender; development is currently with
+Blender 2.73 and later. A Python 3-compatible and Blender-accesible
+version of pyyaml.
 
 ## License
 
@@ -36,3 +38,7 @@ GNU GPL v3
 ## Disclaimer
 
 Use at your own risk. This project is not affiliated with Blender, Phonopy or v_sim.
+
+
+[Skelton2015]: http://dx.doi.org/10.1063/1.4917044
+[Brivio2015]: http://arxiv.org/abs/1504.07508
