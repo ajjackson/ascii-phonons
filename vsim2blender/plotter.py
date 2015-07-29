@@ -5,6 +5,7 @@ import random
 # import sys
 from mathutils import Vector
 import math
+import cmath
 
 # # Modify path to import stuff from other file
 
@@ -145,6 +146,15 @@ def add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), scale_factor=1.0, 
 #
 #
 
+def animate_atom_vibs(atom, qpt, cell_id, displacement_vector, n_frames=30):
+
+    r = atom.location
+    for frame in range(n_frames):
+        bpy.context.scene.frame_set(frame)
+        exponent = cmath.exp( complex(0,1) * (r.dot(qpt) - 2 * math.pi*frame/n_frames)).real
+        atom.location = r + Vector([x.real for x in [x * exponent for x in displacement_vector]])
+        atom.keyframe_insert(data_path="location",index=-1)
+
 def main(ascii_file=False):
 
     if not ascii_file:
@@ -153,6 +163,12 @@ def main(ascii_file=False):
     vsim_cell, positions, symbols, vibs = import_vsim(ascii_file)
     lattice_vectors = cell_vsim_to_vectors(vsim_cell)
 
+    # For now, no supercell, first mode, Gamma point
+    vib_index = 10
+    cell_id = Vector((0,0,0))
+    qpt = Vector((0,0,0))
+
+
     # Switch to a new empty scene
     bpy.ops.scene.new(type='EMPTY')
     
@@ -160,9 +176,10 @@ def main(ascii_file=False):
     draw_bounding_box(lattice_vectors)
 
     # Draw atoms
-    for i, (position, symbol) in enumerate(zip(positions, symbols)):
-        add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), name = '{0}_{1}'.format(i,symbol))
-
+    for atom_index, (position, symbol) in enumerate(zip(positions, symbols)):
+        atom = add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), name = '{0}_{1}'.format(atom_index,symbol))
+        displacement_vector = vibs[vib_index].vectors[atom_index]
+        animate_atom_vibs(atom, qpt, cell_id, displacement_vector)
 
     # Position camera and render
 
