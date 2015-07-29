@@ -3,6 +3,7 @@
 import re 
 from collections import namedtuple
 Mode = namedtuple('Mode', 'freq qpt vectors')
+from mathutils import Vector
 
 def import_vsim(filename):
     with open(filename,'r') as f:
@@ -35,7 +36,7 @@ def import_vsim(filename):
         vector_txt = re.search('qpt=\[(.+)\]',line)
         if vector_txt:
             mode_data = vector_txt.group(1).split(';')
-            qpt = [float(x) for x in mode_data[0:3]]
+            qpt = Vector([float(x) for x in mode_data[0:3]])
             freq = float(mode_data[3])
             vector_list = [float(x) for x in mode_data[4:]]
             vector_set = [vector_list[6*i:6*i+3] for i in range(len(positions))]

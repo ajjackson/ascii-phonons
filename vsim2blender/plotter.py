@@ -6,6 +6,7 @@ import random
 from mathutils import Vector
 import math
 import cmath
+import itertools
 
 # # Modify path to import stuff from other file
 
@@ -163,11 +164,12 @@ def main(ascii_file=False):
     vsim_cell, positions, symbols, vibs = import_vsim(ascii_file)
     lattice_vectors = cell_vsim_to_vectors(vsim_cell)
 
-    # For now, no supercell, first mode, Gamma point
-    vib_index = 10
+    # For now, fixed mode, qpt read from file
+    vib_index = 5
     cell_id = Vector((0,0,0))
-    qpt = Vector((0,0,0))
+    n_frames = 30
 
+    supercell = [5,5,5]
 
     # Switch to a new empty scene
     bpy.ops.scene.new(type='EMPTY')
@@ -176,15 +178,23 @@ def main(ascii_file=False):
     draw_bounding_box(lattice_vectors)
 
     # Draw atoms
-    for atom_index, (position, symbol) in enumerate(zip(positions, symbols)):
-        atom = add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), name = '{0}_{1}'.format(atom_index,symbol))
-        displacement_vector = vibs[vib_index].vectors[atom_index]
-        animate_atom_vibs(atom, qpt, cell_id, displacement_vector)
+
+    for cell_id_tuple in itertools.product(range(supercell[0]),range(supercell[1]),range(supercell[2])):
+        cell_id = Vector(cell_id_tuple)
+        for atom_index, (position, symbol) in enumerate(zip(positions, symbols)):
+            atom = add_atom(position,lattice_vectors,symbol,cell_id=cell_id, name = '{0}_{1}_{2}{3}{4}'.format(atom_index,symbol,*cell_id_tuple))
+            displacement_vector = vibs[vib_index].vectors[atom_index]
+            qpt = vibs[vib_index].qpt
+            animate_atom_vibs(atom, qpt, cell_id, displacement_vector, n_frames=n_frames)
 
     # Position camera and render
 
-    camera_x = lattice_vectors[0][0]/2. + lattice_vectors[2][0]/2.
-    camera_loc=( camera_x, -3 * max((lattice_vectors[0][0], lattice_vectors[2][2])), lattice_vectors[2][2]/2.)
+    camera_x = (lattice_vectors[0][0]/2. + lattice_vectors[2][0]/2.) * supercell[0]
+    camera_loc=( camera_x,
+                 -2.5 * max((
+                     (lattice_vectors[0][0] + lattice_vectors[2][0]) * supercell[0],
+                                     lattice_vectors[2][2] * supercell[2])),
+                lattice_vectors[2][2]/2. * supercell[2])
     bpy.ops.object.camera_add(location=camera_loc,rotation=(math.pi/2,0,0))
     camera = bpy.context.object
     bpy.context.scene.camera = camera
@@ -196,7 +206,8 @@ def main(ascii_file=False):
     bpy.context.scene.render.resolution_y = 1080
     bpy.context.scene.render.resolution_percentage = 50
     bpy.context.scene.render.use_edge_enhance = True
-
+    bpy.context.scene.frame_start = 0
+    bpy.context.scene.frame_end = (n_frames-1)
 
 if __name__=="__main__":
     main('gamma_vibs.ascii')
