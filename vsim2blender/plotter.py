@@ -166,7 +166,8 @@ def main(ascii_file=False):
 
     # Position camera and render
 
-    camera_loc=( lattice_vectors[0][0]/2., -3 * max((lattice_vectors[0][0], lattice_vectors[2][2])), lattice_vectors[2][2]/2.)
+    camera_x = lattice_vectors[0][0]/2. + lattice_vectors[2][0]/2.
+    camera_loc=( camera_x, -3 * max((lattice_vectors[0][0], lattice_vectors[2][2])), lattice_vectors[2][2]/2.)
     bpy.ops.object.camera_add(location=camera_loc,rotation=(math.pi/2,0,0))
     camera = bpy.context.object
     bpy.context.scene.camera = camera
