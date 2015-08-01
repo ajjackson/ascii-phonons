@@ -18,12 +18,19 @@ Developing Blender add-ons can be a bit clunky as one is required to
 mess around with the GUI when testing changes, so there may be some
 hackery to get around this.  Building Blender as a Python library
 would ease development considerably, but appears to be quite difficult
-to do on a Mac.  For now, the best approach is probably to simlink the
-folder **vsim2blender** into the blender add-ons folder; on Mac OSX
-this is
-`/Applications/Blender/blender.app/Contents/Resources/2.xx/scripts/addons`.
+to do on a Mac.
 
 The target platforms are modern GNU/Linux distributions and Mac OS X. Windows support is seen as faintly desirable, but would impede the initial development process.
+
+## Setup
+
+The simplest way to set up this code at the moment is
+
+1. Download the code with `git clone git@github.com:ajjackson/ascii-phonons`
+2. Get pyyaml from http://pyyaml.org and create a simlink to the modules directory in this code with `ln -s /path/to/pyyaml/lib3/yaml /path/to/ascii-phonons/vsim2blender/modules/`
+3. Open Blender and, in the default file, add the project folder to Blender's python path in the User Preferences. Remember to "save user settings" with the button at the bottom of the panel, before saving the new defaults with CTRL-U.
+![](images/screenshot1.png)
+4. Close Blender; the path is updated when Blender is re-opened.
 
 ## Requirements
 

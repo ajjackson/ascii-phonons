@@ -1,0 +1,3 @@
+[submodule "modules/pyyaml"]
+	path = modules/pyyaml
+	url = https://bitbucket.org/xi/pyyaml

@@ -169,7 +169,7 @@ def main(ascii_file=False):
     cell_id = Vector((0,0,0))
     n_frames = 30
 
-    supercell = [5,5,5]
+    supercell = [2,2,2]
 
     # Switch to a new empty scene
     bpy.ops.scene.new(type='EMPTY')
