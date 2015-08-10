@@ -156,38 +156,44 @@ def animate_atom_vibs(atom, qpt, cell_id, displacement_vector, n_frames=30):
         atom.location = r + Vector([x.real for x in [x * exponent for x in displacement_vector]])
         atom.keyframe_insert(data_path="location",index=-1)
 
-def main(ascii_file=False):
+def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=30, vectors=False, bbox=True):
+    """
+    Open v_sim ascii file in Blender
 
-    if not ascii_file:
-        ascii_file='gamma_vibs.ascii'
+    Arguments:
+        ascii_file: Path to file
+        mode_index: integer id of mode; 0 corresponds to first mode in ascii file
+        supercell: 3-tuple or list of integer supercell dimensions
+        animate: Boolean: if True, add animation keyframes
+        n_frames: Animation length in frames
+        vectors: Boolean; if True, show arrows
+        bbox: Boolean; if True, show bounding box
+
+    """
 
     vsim_cell, positions, symbols, vibs = import_vsim(ascii_file)
     lattice_vectors = cell_vsim_to_vectors(vsim_cell)
-
-    # For now, fixed mode, qpt read from file
-    vib_index = 5
-    cell_id = Vector((0,0,0))
-    n_frames = 30
-
-    supercell = [2,2,2]
-
+    
     # Switch to a new empty scene
     bpy.ops.scene.new(type='EMPTY')
     
     # Draw bounding box #
-    draw_bounding_box(lattice_vectors)
+    if bbox:
+        draw_bounding_box(lattice_vectors)
 
     # Draw atoms
-
     for cell_id_tuple in itertools.product(range(supercell[0]),range(supercell[1]),range(supercell[2])):
         cell_id = Vector(cell_id_tuple)
         for atom_index, (position, symbol) in enumerate(zip(positions, symbols)):
             atom = add_atom(position,lattice_vectors,symbol,cell_id=cell_id, name = '{0}_{1}_{2}{3}{4}'.format(atom_index,symbol,*cell_id_tuple))
-            displacement_vector = vibs[vib_index].vectors[atom_index]
-            qpt = vibs[vib_index].qpt
-            animate_atom_vibs(atom, qpt, cell_id, displacement_vector, n_frames=n_frames)
+            displacement_vector = vibs[mode_index].vectors[atom_index]
+            qpt = vibs[mode_index].qpt
+            if animate:
+                animate_atom_vibs(atom, qpt, cell_id, displacement_vector, n_frames=n_frames)
+            if vectors:
+                raise Exception("Sorry, vectors are not yet implemented")
 
-    # Position camera and render
+    # Position camera and colour world
 
     camera_x = (lattice_vectors[0][0]/2. + lattice_vectors[2][0]/2.) * supercell[0]
     camera_loc=( camera_x,
@@ -202,6 +208,7 @@ def main(ascii_file=False):
     bpy.context.scene.world = bpy.data.worlds['World']
     bpy.data.worlds['World'].horizon_color = [0.5, 0.5, 0.5]
 
+def setup_render(n_frames=30):
     bpy.context.scene.render.resolution_x = 1080
     bpy.context.scene.render.resolution_y = 1080
     bpy.context.scene.render.resolution_percentage = 50
@@ -209,5 +216,3 @@ def main(ascii_file=False):
     bpy.context.scene.frame_start = 0
     bpy.context.scene.frame_end = (n_frames-1)
 
-if __name__=="__main__":
-    main('gamma_vibs.ascii')

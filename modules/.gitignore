@@ -1,0 +1,2 @@
+# Dummy gitignore used to create modules folder in git repo.
+Simlink pyyaml into this folder to give Blender access to it.
