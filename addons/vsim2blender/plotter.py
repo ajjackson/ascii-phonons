@@ -12,7 +12,7 @@ import itertools
 
 # sys.path.insert(0, os.path.abspath(script_directory)+'/..')
 from vsim2blender.ascii_importer import import_vsim, cell_vsim_to_vectors
-
+from vsim2blender.arrows import add_arrow, vector_to_euler
 
 script_directory = os.path.dirname(__file__)
 defaults_table_file = script_directory + '/periodic_table.yaml'
@@ -53,6 +53,30 @@ def init_material(symbol, col=False, shadeless=True):
     material.use_shadeless = shadeless
     return material
 
+def absolute_position(position, lattice_vectors=[1.,1.,1.], cell_id=[0,0,0], reduced=False):
+    """
+    Calculate the absolute position of an atom in a supercell array
+
+    Arguments:
+        position: 3-tuple, list or vector containing atom coordinates. Units same as unit cell unless reduced=True
+        lattice_vectors: 3-tuple or list containing Vectors specifying lattice bounding box/repeating unit
+        cell_id: 3-tuple of integers, indexing position of cell in supercell. (0,0,0) is the
+            origin cell. Negative values are ok.
+        reduced: Boolean. If true, positions are taken to be in units of lattice vectors;
+            if false, positions are taken to be Cartesian.
+    """
+    
+    if reduced:
+        cartesian_position = Vector((0.,0.,0.))
+        for i, (position_i, vector) in enumerate(zip(position, lattice_vectors)):
+            cartesian_position += (position_i + cell_id[i]) * vector
+    else:
+        cartesian_position = Vector(position)
+        for i, vector in enumerate(lattice_vectors):
+            cartesian_position += (cell_id[i] * vector)
+
+    return cartesian_position
+
 def add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), scale_factor=1.0, reduced=False,
              yaml_file=False,periodic_table=False, name=False):
     """
@@ -74,15 +98,8 @@ def add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), scale_factor=1.0, 
             priority over yaml_file and default table.
         name: Label for atom object
     """
-    if reduced:
-        cartesian_position = Vector((0.,0.,0.))
-        for i, (position_i, vector) in enumerate(zip(position, lattice_vectors)):
-            cartesian_position += (position_i + cell_id[i]) * vector
-    else:
-        cartesian_position = Vector(position)
-        for i, vector in enumerate(lattice_vectors):
-            cartesian_position += (cell_id[i] * vector)
 
+    cartesian_position = absolute_position(position, lattice_vectors=lattice_vectors, cell_id=cell_id, reduced=reduced)
 
     # Get colour. Priority order is 1. periodic_table dict 2. yaml_file 3. defaults_table
     if yaml_file:
@@ -111,7 +128,6 @@ def add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), scale_factor=1.0, 
         radius = defaults_table[symbol]['r']
     else:
         radius = 1.0
-
 
     bpy.ops.mesh.primitive_uv_sphere_add(location=cartesian_position, size=radius * scale_factor)
     atom = bpy.context.object
@@ -156,7 +172,7 @@ def animate_atom_vibs(atom, qpt, cell_id, displacement_vector, n_frames=30):
         atom.location = r + Vector([x.real for x in [x * exponent for x in displacement_vector]])
         atom.keyframe_insert(data_path="location",index=-1)
 
-def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=30, vectors=False, bbox=True):
+def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=30, vectors=False, bbox=True, scale_factor=1.0):
     """
     Open v_sim ascii file in Blender
 
@@ -185,14 +201,15 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=
     for cell_id_tuple in itertools.product(range(supercell[0]),range(supercell[1]),range(supercell[2])):
         cell_id = Vector(cell_id_tuple)
         for atom_index, (position, symbol) in enumerate(zip(positions, symbols)):
-            atom = add_atom(position,lattice_vectors,symbol,cell_id=cell_id, name = '{0}_{1}_{2}{3}{4}'.format(atom_index,symbol,*cell_id_tuple))
+            atom = add_atom(position,lattice_vectors,symbol,cell_id=cell_id, name = '{0}_{1}_{2}{3}{4}'.format(atom_index,symbol,*cell_id_tuple), scale_factor=scale_factor)
             displacement_vector = vibs[mode_index].vectors[atom_index]
             qpt = vibs[mode_index].qpt
             if animate:
                 animate_atom_vibs(atom, qpt, cell_id, displacement_vector, n_frames=n_frames)
             if vectors:
-                raise Exception("Sorry, vectors are not yet implemented")
-
+                add_arrow(loc=absolute_position(position, lattice_vectors=lattice_vectors, cell_id=cell_id),
+                          rot_euler=vector_to_euler(displacement_vector), scale=1) # STILL NEED TO GET MAGNITUDE
+            
     # Position camera and colour world
 
     camera_x = (lattice_vectors[0][0]/2. + lattice_vectors[2][0]/2.) * supercell[0]
@@ -215,4 +232,33 @@ def setup_render(n_frames=30):
     bpy.context.scene.render.use_edge_enhance = True
     bpy.context.scene.frame_start = 0
     bpy.context.scene.frame_end = (n_frames-1)
+
+def render(scene=False,output_file=False):
+    """
+    Render the scene
+
+    Arguments:
+        scene: Name of scene. If False, render active scene.
+        output_file: Blender-formatted output path/filename. If False, do not render.
+            This is a useful fall-through as calls to render() can be harmlessly included
+            in boilerplate.
+
+    """
+
+    if not output_file:
+        pass
+
+    else:
+        if not scene:
+            scene = bpy.context.scene.name
+
+    # Set output path (No sanitising or absolutising at this stage)
+    bpy.data.scenes[scene].render.filepath=output_file
+
+    # Work out if animation or still is required
+
+    animate = (bpy.data.scenes[scene].frame_start != bpy.data.scenes[scene].frame_end)
+
+    # Render!
+    bpy.ops.render.render(animation=animate, write_still=(not animate), scene=scene)
 
