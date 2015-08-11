@@ -27,16 +27,30 @@ The target platforms are modern GNU/Linux distributions and Mac OS X. Windows su
 The simplest way to set up this code at the moment is
 
 1. Download the code with `git clone git@github.com:ajjackson/ascii-phonons`
-2. Get pyyaml from http://pyyaml.org and create a simlink to the modules directory in this code with `ln -s /path/to/pyyaml/lib3/yaml /path/to/ascii-phonons/vsim2blender/modules/`
+2. Get pyyaml from http://pyyaml.org and create a simlink to the modules directory in this code with `ln -s /path/to/pyyaml/lib3/yaml /path/to/ascii-phonons/modules/`
 3. Open Blender and, in the default file, add the project folder to Blender's python path in the User Preferences. Remember to "save user settings" with the button at the bottom of the panel, before saving the new defaults with CTRL-U.
 ![](images/screenshot1.png)
 4. Close Blender; the path is updated when Blender is re-opened.
 
+## Using the wrapper script
+
+At the moment the most sane way to work with this is to use the wrapper **Scripts/blend_ascii.py** in a Bash shell. Call the script with
+
+    python blend_ascii.py -h
+
+for information about the numerous command-line arguments.
+If working on Mac OS X, you will probably need to specify the path to your Blender binary, which is tucked away in a .app package.
+A typical call to the wrapper script on a Mac would therefore be something like:
+
+    python blend_ascii.py /path/to/my/phonons.ascii -b /Applications/Blender/Blender.app/Contents/MacOS/blender --static --vectors
+
 ## Requirements
 
-A recent version of Blender; development is currently with
-Blender 2.73 and later. A Python 3-compatible and Blender-accesible
-version of pyyaml.
+- Some means of generating .ascii files. We like [Phonopy](http://phonopy.sourceforge.net).
+- A recent version of Blender; development is currently with
+  Blender 2.73 and later, although some effort exists to preserve compatibility with earlier versions.
+  [Ubuntu repositories are often quite far behind...]
+- A Python 3-compatible and Blender-accesible version of pyyaml.
 
 ## License
 
@@ -45,7 +59,6 @@ GNU GPL v3
 ## Disclaimer
 
 Use at your own risk. This project is not affiliated with Blender, Phonopy or v_sim.
-
 
 [Skelton2015]: http://dx.doi.org/10.1063/1.4917044
 [Brivio2015]: http://arxiv.org/abs/1504.07508
