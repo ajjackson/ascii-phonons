@@ -3,7 +3,7 @@ import yaml
 import os
 import random
 # import sys
-from mathutils import Vector
+from mathutils import Vector, Matrix
 import math
 import cmath
 import itertools
@@ -161,18 +161,46 @@ def add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), scale_factor=1.0, 
 #
 # _r'_(jl,t,nu) = _r_(jl) + _U_(j,_k_,nu) exp(i[_k_ _r_(jl) - 2 pi (frame#)/N])
 #
-#
+# The arrows for static images are defined as the vectors from the
+# initial (average) positions to one quarter of the vibrational period (i.e. max displacement)
 
-def animate_atom_vibs(atom, qpt, cell_id, displacement_vector, n_frames=30):
+def animate_atom_vibs(atom, qpt, displacement_vector, n_frames=30, magnitude=1.):
+    """
+    Apply vibrations as series of LOC keyframes
+
+    Arguments:
+        atom: bpy atom object
+        qpt: wave vector of mode in CARTESIAN COORDINATES
+        displacement_vector: complex vector describing relative displacement of atom
+        n_frames: total number of animation frames. Animation will run from frame 0 to n_frames-1.
+        magnitude: Scale factor for vibrations.
+    """
 
     r = atom.location
     for frame in range(n_frames):
         bpy.context.scene.frame_set(frame)
-        exponent = cmath.exp( complex(0,1) * (r.dot(qpt) - 2 * math.pi*frame/n_frames)).real
-        atom.location = r + Vector([x.real for x in [x * exponent for x in displacement_vector]])
+        exponent = cmath.exp( complex(0,1) * (r.dot(qpt) - 2 * math.pi*frame/n_frames))
+        atom.location = r + magnitude * Vector([x.real for x in [x * exponent for x in displacement_vector]])
         atom.keyframe_insert(data_path="location",index=-1)
 
-def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=30, vectors=False, bbox=True, scale_factor=1.0):
+def vector_with_phase(atom, qpt, displacement_vector):
+    """
+    Calculate cartesian vector associated with atom vibrations
+
+    Arguments:
+        atom: bpy atom object
+        qpt: wave vector of mode in CARTESIAN COORDINATES
+        displacement_vector: complex vector describing relative displacement of atom
+        n_frames: total number of animation frames. Animation will run from frame 0 to n_frames-1.
+        magnitude: Scale factor for vibrations.
+    """
+    r = atom.location
+    exponent = cmath.exp( complex(0,1) * (r.dot(qpt) - 0.25 * math.pi))
+    arrow_end = r + Vector([x.real for x in [x * exponent for x in displacement_vector]])
+    return arrow_end - r
+
+
+def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=30, vectors=False, bbox=True, scale_factor=1.0, vib_magnitude=1.0, arrow_magnitude=1.0):
     """
     Open v_sim ascii file in Blender
 
@@ -204,11 +232,19 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=
             atom = add_atom(position,lattice_vectors,symbol,cell_id=cell_id, name = '{0}_{1}_{2}{3}{4}'.format(atom_index,symbol,*cell_id_tuple), scale_factor=scale_factor)
             displacement_vector = vibs[mode_index].vectors[atom_index]
             qpt = vibs[mode_index].qpt
+            B = 2 * math.pi * Matrix(lattice_vectors).inverted().transposed()
+            qpt_cartesian = Vector(qpt) * B
+            
             if animate:
-                animate_atom_vibs(atom, qpt, cell_id, displacement_vector, n_frames=n_frames)
+                animate_atom_vibs(atom, qpt_cartesian, displacement_vector,
+                                  n_frames=n_frames, magnitude=vib_magnitude)
             if vectors:
-                add_arrow(loc=absolute_position(position, lattice_vectors=lattice_vectors, cell_id=cell_id),
-                          rot_euler=vector_to_euler(displacement_vector), scale=1) # STILL NEED TO GET MAGNITUDE
+                arrow_vector=vector_with_phase(atom, qpt_cartesian, displacement_vector)
+
+                add_arrow(loc=absolute_position(position, lattice_vectors=lattice_vectors,
+                                                cell_id=cell_id),
+                          rot_euler=vector_to_euler(arrow_vector),
+                          scale=arrow_vector.length*arrow_magnitude)
             
     # Position camera and colour world
 
@@ -245,7 +281,7 @@ def render(scene=False,output_file=False):
 
     """
 
-    if not output_file:
+    if (not output_file) or output_file=='False':
         pass
 
     else:
@@ -261,4 +297,3 @@ def render(scene=False,output_file=False):
 
     # Render!
     bpy.ops.render.render(animation=animate, write_still=(not animate), scene=scene)
-
