@@ -34,7 +34,7 @@ In the mean time, the wrapper script sets the paths for you.
 
 ## Using the wrapper script
 
-At the moment the most sane way to work with this is to use the wrapper **Scripts/blend_ascii.py** in a Bash shell. Call the script with
+At the moment the most sane way to work with this is to use the wrapper **scripts/blend_ascii.py** in a Bash shell. Call the script with
 
     python blend_ascii.py -h
 
@@ -61,6 +61,8 @@ which will use Imagemagick to generate **pretty.gif**.
   Blender 2.73 and later, although some effort exists to preserve compatibility with earlier versions.
   [Ubuntu repositories are often quite far behind...]
 - A Python 3-compatible and Blender-accesible version of pyyaml.
+- [Imagemagick](http://www.imagemagick.org) tools (specifically "convert" and "montage") are used for image conversion and tiling.
+  This is available in most package managers and may even be pre-installed with your Unix-like operating system.
 
 ## License
 
