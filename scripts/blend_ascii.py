@@ -22,7 +22,8 @@ def main(input_file, blender_bin=False, mode_index=0, supercell=(2,2,2),
     else:
         import platform
         if platform.mac_ver()[0] != '':
-            call_args = ['open','-a','blender']
+            #call_args = ['open','-a','blender','--args']
+            call_args=['/Applications/Blender/blender.app/Contents/MacOS/blender']
         else:
             call_args = ['blender']
 
