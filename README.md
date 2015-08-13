@@ -27,7 +27,9 @@ The target platforms are modern GNU/Linux distributions and Mac OS X. Windows su
 The simplest way to set up this code at the moment is
 
 1. Download the code with `git clone git@github.com:ajjackson/ascii-phonons`
-2. Get pyyaml from http://pyyaml.org and create a simlink to the modules directory in this code with `ln -s /path/to/pyyaml/lib3/yaml /path/to/ascii-phonons/modules/`
+2. Setup pyyaml for Blender's python3
+    - On a Debian or Ubuntu system with sudo privileges, just `apt-get install python3-yaml`.
+    - Otherwise, get pyyaml from http://pyyaml.org and create a simlink to the modules directory in this code with `ln -s /path/to/pyyaml/lib3/yaml /path/to/ascii-phonons/modules/`
 3. Open Blender and, in the default file, add the project folder to Blender's python path in the User Preferences. Remember to "save user settings" with the button at the bottom of the panel, before saving the new defaults with CTRL-U.
 ![](images/screenshot1.png)
 4. Close Blender; the path is updated when Blender is re-opened.
