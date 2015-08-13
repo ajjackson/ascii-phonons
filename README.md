@@ -30,21 +30,31 @@ The simplest way to set up this code at the moment is
 2. Setup pyyaml for Blender's python3
     - On a Debian or Ubuntu system with sudo privileges, just `apt-get install python3-yaml`.
     - Otherwise, get pyyaml from http://pyyaml.org and create a simlink to the modules directory in this code with `ln -s /path/to/pyyaml/lib3/yaml /path/to/ascii-phonons/modules/`
-3. Open Blender and, in the default file, add the project folder to Blender's python path in the User Preferences. Remember to "save user settings" with the button at the bottom of the panel, before saving the new defaults with CTRL-U.
-![](images/screenshot1.png)
-4. Close Blender; the path is updated when Blender is re-opened.
+    
+Eventually this will be implemented as a proper Blender add-on, and users will need to follow the Blender procedure for installing from a .zip file.
+In the mean time, the wrapper script sets the paths for you.
 
 ## Using the wrapper script
 
-At the moment the most sane way to work with this is to use the wrapper **Scripts/blend_ascii.py** in a Bash shell. Call the script with
+At the moment the most sane way to work with this is to use the wrapper **scripts/blend_ascii.py** in a Bash shell. Call the script with
 
     python blend_ascii.py -h
 
 for information about the numerous command-line arguments.
-If working on Mac OS X, you will probably need to specify the path to your Blender binary, which is tucked away in a .app package.
-A typical call to the wrapper script on a Mac would therefore be something like:
 
-    python blend_ascii.py /path/to/my/phonons.ascii -b /Applications/Blender/Blender.app/Contents/MacOS/blender --static --vectors
+If working on Mac OS X, you may need to specify the path to your Blender binary, which is tucked away in a .app package, using the `-b` flag.
+However, the script assumes you have Blender installed in a folder called "Blender" in the root Applications folder, and should find your binary in this case.
+
+A typical call to the wrapper script would be something like:
+
+    python blend_ascii.py /path/to/my/phonons.ascii -m 5 --static --vectors -o pretty
+
+which should write a static image **pretty.png**, illustrating mode 5 with arrows.
+To generate an animation, try
+
+    python blend_ascii.py /path/to/my/phonons.ascii -m 1 --gif -o pretty
+
+which will use Imagemagick to generate **pretty.gif**.
 
 ## Requirements
 
@@ -53,6 +63,8 @@ A typical call to the wrapper script on a Mac would therefore be something like:
   Blender 2.73 and later, although some effort exists to preserve compatibility with earlier versions.
   [Ubuntu repositories are often quite far behind...]
 - A Python 3-compatible and Blender-accesible version of pyyaml.
+- [Imagemagick](http://www.imagemagick.org) tools (specifically "convert" and "montage") are used for image conversion and tiling.
+  This is available in most package managers and may even be pre-installed with your Unix-like operating system.
 
 ## License
 
