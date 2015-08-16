@@ -29,7 +29,8 @@ The simplest way to set up this code at the moment is
 1. Download the code with `git clone git@github.com:ajjackson/ascii-phonons`
 2. Setup pyyaml for Blender's python3
     - On a Debian or Ubuntu system with sudo privileges, just `apt-get install python3-yaml`.
-    - Otherwise, get pyyaml from http://pyyaml.org and create a simlink to the modules directory in this code with `ln -s /path/to/pyyaml/lib3/yaml /path/to/ascii-phonons/modules/`
+    - Otherwise, get pyyaml from http://pyyaml.org and create a simlink to the modules directory in this code with `ln -s /path/to/pyyaml/lib3/yaml /path/to/ascii-phonons/modules/`.
+      You can get faster performance by building with the bindings to libyaml, which is written in C, but this isn't necessary for the simple YAML files used in this project.
     
 Eventually this will be implemented as a proper Blender add-on, and users will need to follow the Blender procedure for installing from a .zip file.
 In the mean time, the wrapper script sets the paths for you.
