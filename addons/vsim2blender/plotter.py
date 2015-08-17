@@ -17,13 +17,16 @@ from vsim2blender.arrows import add_arrow, vector_to_euler
 script_directory = os.path.dirname(__file__)
 defaults_table_file = script_directory + '/periodic_table.yaml'
 
-def draw_bounding_box(cell):
+def draw_bounding_box(cell, offset=(0,0,0)):
     a, b, c = cell
     verts = [tuple(x) for x in [(0,0,0), a, a+b, b, c, c+a, c+a+b, c+b]]
     faces = [(0,1,2,3), (0,1,5,4), (1,2,6,5), (2,3,7,6), (3,0,4,7), (4,5,6,7)]
     box_mesh = bpy.data.meshes.new("Bounding Box")
     box_object = bpy.data.objects.new("Bounding Box", box_mesh)
-    box_object.location = (0,0,0)
+
+    offset=Vector(offset)
+    cart_offset = offset * Matrix(cell)
+    box_object.location = (cart_offset)
     bpy.context.scene.objects.link(box_object)
     box_mesh.from_pydata(verts,[],faces)
     box_mesh.update(calc_edges=True)
@@ -200,7 +203,7 @@ def vector_with_phase(atom, qpt, displacement_vector):
     return arrow_end - r
 
 
-def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=30, vectors=False, bbox=True, scale_factor=1.0, vib_magnitude=1.0, arrow_magnitude=1.0):
+def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=30, vectors=False, bbox=True, bbox_offset=(0,0,0), scale_factor=1.0, vib_magnitude=1.0, arrow_magnitude=1.0):
     """
     Open v_sim ascii file in Blender
 
@@ -212,6 +215,7 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=
         n_frames: Animation length in frames
         vectors: Boolean; if True, show arrows
         bbox: Boolean; if True, show bounding box
+        bbox_loc: Vector or 3-tuple in lattice vector coordinates; position of bbox. Default (0,0,0) (Left front bottom)
 
     """
 
@@ -223,7 +227,8 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=
     
     # Draw bounding box #
     if bbox:
-        draw_bounding_box(lattice_vectors)
+        bbox_offset = Vector(bbox_offset)
+        draw_bounding_box(lattice_vectors, offset=bbox_offset)
 
     # Draw atoms
     for cell_id_tuple in itertools.product(range(supercell[0]),range(supercell[1]),range(supercell[2])):
