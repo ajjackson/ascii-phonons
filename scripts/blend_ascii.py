@@ -5,8 +5,10 @@ import os
 from subprocess import call
 import tempfile
 
-addons_path =  [os.path.pardir + os.path.sep + 'addons']
-modules_path =  [os.path.pardir + os.path.sep + 'modules']
+ascii_phonons_path = os.path.abspath(
+     os.path.dirname(os.path.realpath(__file__)) + os.path.sep + os.path.pardir)
+addons_path =  [ascii_phonons_path + os.path.sep + 'addons']
+modules_path =  [ascii_phonons_path + os.path.sep + 'modules']
 
 def main(input_file, blender_bin=False, mode_index=0, supercell=(2,2,2),
          animate=True, n_frames=30, bbox=True, bbox_offset=(0,0,0),
