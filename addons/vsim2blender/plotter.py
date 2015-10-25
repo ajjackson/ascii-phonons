@@ -13,6 +13,7 @@ import itertools
 # sys.path.insert(0, os.path.abspath(script_directory)+'/..')
 from vsim2blender.ascii_importer import import_vsim, cell_vsim_to_vectors
 from vsim2blender.arrows import add_arrow, vector_to_euler
+from vsim2blender.masses import mass_dict
 
 script_directory = os.path.dirname(__file__)
 defaults_table_file = script_directory + '/periodic_table.yaml'
@@ -167,7 +168,7 @@ def add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), scale_factor=1.0, 
 # The arrows for static images are defined as the vectors from the
 # initial (average) positions to one quarter of the vibrational period (i.e. max displacement)
 
-def animate_atom_vibs(atom, qpt, displacement_vector, n_frames=30, magnitude=1.):
+def animate_atom_vibs(atom, qpt, displacement_vector, n_frames=30, magnitude=1., mass=1):
     """
     Apply vibrations as series of LOC keyframes
 
@@ -177,13 +178,14 @@ def animate_atom_vibs(atom, qpt, displacement_vector, n_frames=30, magnitude=1.)
         displacement_vector: complex vector describing relative displacement of atom
         n_frames: total number of animation frames. Animation will run from frame 0 to n_frames-1.
         magnitude: Scale factor for vibrations.
+        mass: Relative atomic mass (inverse sqrt is used to scale vibration magnitude.)
     """
 
     r = atom.location
     for frame in range(n_frames):
         bpy.context.scene.frame_set(frame)
         exponent = cmath.exp( complex(0,1) * (r.dot(qpt) - 2 * math.pi*frame/n_frames))
-        atom.location = r + magnitude * Vector([x.real for x in [x * exponent for x in displacement_vector]])
+        atom.location = r + mass**-.5 * magnitude * Vector([x.real for x in [x * exponent for x in displacement_vector]])
         atom.keyframe_insert(data_path="location",index=-1)
 
 def vector_with_phase(atom, qpt, displacement_vector):
@@ -221,7 +223,9 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=
 
     vsim_cell, positions, symbols, vibs = import_vsim(ascii_file)
     lattice_vectors = cell_vsim_to_vectors(vsim_cell)
-    
+
+    masses = [mass_dict[symbol] for symbol in symbols]
+        
     # Switch to a new empty scene
     bpy.ops.scene.new(type='EMPTY')
     
@@ -233,7 +237,7 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=
     # Draw atoms
     for cell_id_tuple in itertools.product(range(supercell[0]),range(supercell[1]),range(supercell[2])):
         cell_id = Vector(cell_id_tuple)
-        for atom_index, (position, symbol) in enumerate(zip(positions, symbols)):
+        for atom_index, (position, symbol, mass) in enumerate(zip(positions, symbols, masses)):
             atom = add_atom(position,lattice_vectors,symbol,cell_id=cell_id, name = '{0}_{1}_{2}{3}{4}'.format(atom_index,symbol,*cell_id_tuple), scale_factor=scale_factor)
             displacement_vector = vibs[mode_index].vectors[atom_index]
             qpt = vibs[mode_index].qpt
@@ -242,12 +246,12 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=
             
             if animate:
                 animate_atom_vibs(atom, qpt_cartesian, displacement_vector,
-                                  n_frames=n_frames, magnitude=vib_magnitude)
+                                  n_frames=n_frames, magnitude=vib_magnitude, mass=mass)
             if vectors:
                 arrow_vector=vector_with_phase(atom, qpt_cartesian, displacement_vector)
 
                 add_arrow(loc=absolute_position(position, lattice_vectors=lattice_vectors,
-                                                cell_id=cell_id),
+                                                cell_id=cell_id, mass=mass),
                           rot_euler=vector_to_euler(arrow_vector),
                           scale=arrow_vector.length*arrow_magnitude)
             

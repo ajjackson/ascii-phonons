@@ -66,6 +66,11 @@ which will use Imagemagick to generate **pretty.gif**.
 - [Imagemagick](http://www.imagemagick.org) tools (specifically "convert" and "montage") are used for image conversion and tiling.
   This is available in most package managers and may even be pre-installed with your Unix-like operating system.
 
+## Implementation details
+
+The default atomic radii are the covalent radii from [Cordero *et al* (2008)][Cordero2008].
+The eigenvectors are scaled by the square root of the relative atomic mass; the atomic mass data is from [Coursey *et al.* (2015)][Coursey2015].
+
 ## License
 
 GNU GPL v3
@@ -74,5 +79,7 @@ GNU GPL v3
 
 Use at your own risk. This project is not affiliated with Blender, Phonopy or v_sim.
 
-[Skelton2015]: http://dx.doi.org/10.1063/1.4917044
-[Brivio2015]: http://arxiv.org/abs/1504.07508
+[Skelton2015]: http://dx.doi.org/10.1063/1.4917044 "Jonathan M. Skelton, Adam J. Jackson, Mirjana Dimitrievska, Suzanne K. Wallace and Aton Walsh (2015), *APL Mat.* **3**, 041102"
+[Brivio2015]: http://dx.doi.org/10.1103/PhysRevB.92.144308 "Federico Brivio, Jarvist M. Frost, Jonathan M. Skelton, Adam J. Jackson, Oliver J. Weber, Mark T. Weller, Alejandro R. Goñi, Aurélien M. A. Leguy, Piers R. F. Barnes, and Aron Walsh (2015), *Phys. Rev. B* **92**, 144308"
+[Cordero2008]: http://dx.doi.org/10.1039/B801115J "Beatriz Cordero, Verónica Gómez, Ana E. Platero-Prats, Marc Revés, Jorge Echeverría, Eduard Cremades, Flavia Barragána and Santiago Alvarez (2008), *Dalton Trans.* 2832-2838"
+[Coursey2015]: http://physics.nist.gov/Comp "Coursey, J.S., Schwab, D.J., Tsai, J.J., and Dragoset, R.A. (2015), Atomic Weights and Isotopic Compositions (version 4.1). [Online] Available: http://physics.nist.gov/Comp [2015-10-25]. National Institute of Standards and Technology, Gaithersburg, MD."
