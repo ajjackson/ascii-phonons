@@ -249,9 +249,10 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=
                                   n_frames=n_frames, magnitude=vib_magnitude, mass=mass)
             if vectors:
                 arrow_vector=vector_with_phase(atom, qpt_cartesian, displacement_vector)
-
+                print(arrow_vector.length)
                 add_arrow(loc=absolute_position(position, lattice_vectors=lattice_vectors,
-                                                cell_id=cell_id, mass=mass),
+                                                cell_id=cell_id),
+                          mass=mass,
                           rot_euler=vector_to_euler(arrow_vector),
                           scale=arrow_vector.length*arrow_magnitude)
             
