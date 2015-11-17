@@ -239,10 +239,11 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=
         cell_id = Vector(cell_id_tuple)
         for atom_index, (position, symbol, mass) in enumerate(zip(positions, symbols, masses)):
             atom = add_atom(position,lattice_vectors,symbol,cell_id=cell_id, name = '{0}_{1}_{2}{3}{4}'.format(atom_index,symbol,*cell_id_tuple), scale_factor=scale_factor)
-            displacement_vector = vibs[mode_index].vectors[atom_index]
-            qpt = vibs[mode_index].qpt
-            B = 2 * math.pi * Matrix(lattice_vectors).inverted().transposed()
-            qpt_cartesian = Vector(qpt) * B
+            if animate or vectors:
+                displacement_vector = vibs[mode_index].vectors[atom_index]
+                qpt = vibs[mode_index].qpt
+                B = 2 * math.pi * Matrix(lattice_vectors).inverted().transposed()
+                qpt_cartesian = Vector(qpt) * B
             
             if animate:
                 animate_atom_vibs(atom, qpt_cartesian, displacement_vector,
