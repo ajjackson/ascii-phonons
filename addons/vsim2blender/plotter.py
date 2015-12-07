@@ -205,7 +205,7 @@ def vector_with_phase(atom, qpt, displacement_vector):
     return arrow_end - r
 
 
-def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=30, vectors=False, bbox=True, bbox_offset=(0,0,0), scale_factor=1.0, vib_magnitude=1.0, arrow_magnitude=1.0):
+def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=30, vectors=False, bbox=True, bbox_offset=(0,0,0), scale_factor=1.0, vib_magnitude=1.0, arrow_magnitude=1.0, camera_rot=0.):
     """
     Open v_sim ascii file in Blender
 
@@ -218,6 +218,7 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=
         vectors: Boolean; if True, show arrows
         bbox: Boolean; if True, show bounding box
         bbox_loc: Vector or 3-tuple in lattice vector coordinates; position of bbox. Default (0,0,0) (Left front bottom)
+        camera_rot: Camera rotation in degrees
 
     """
 
@@ -270,7 +271,7 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=
     camera_loc=( camera_x,
                  1.05 * camera_y,
                 camera_z)
-    bpy.ops.object.camera_add(location=camera_loc,rotation=(math.pi/2,0,0))
+    bpy.ops.object.camera_add(location=camera_loc,rotation=(math.pi/2,(2*math.pi/360.)*camera_rot,0))
     camera = bpy.context.object
     bpy.context.scene.camera = camera
     bpy.data.cameras[camera.name].angle = field_of_view

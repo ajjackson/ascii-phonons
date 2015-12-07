@@ -13,7 +13,7 @@ modules_path =  [ascii_phonons_path + os.path.sep + 'modules']
 def main(input_file, blender_bin=False, mode_index=0, supercell=(2,2,2),
          animate=True, n_frames=30, bbox=True, bbox_offset=(0,0,0),
          vectors=False, output_file=False, vib_magnitude=1.0, arrow_magnitude=1.0,
-         gui=False, gif=False, scale_factor=1.0):
+         gui=False, gif=False, scale_factor=1.0, camera_rot=0.):
     input_file = os.path.abspath(input_file)
     if output_file:
         output_file = os.path.abspath(output_file)
@@ -49,12 +49,12 @@ import vsim2blender.plotter
 vsim2blender.plotter.open_mode('{0}', {1}, animate={2}, n_frames={3},
                                 vectors={4}, scale_factor={5}, vib_magnitude={6},
                                 arrow_magnitude={7}, supercell=({8},{9},{10}),
-                                bbox={11}, bbox_offset={12})
+                                bbox={11}, bbox_offset={12}, camera_rot={13})
 vsim2blender.plotter.setup_render(n_frames={3})
 vsim2blender.plotter.render(output_file='{out_file}')
 """.format(input_file, mode_index, animate, n_frames, vectors,
            scale_factor, vib_magnitude, arrow_magnitude,
-           supercell[0], supercell[1], supercell[2], bbox, bbox_offset,
+           supercell[0], supercell[1], supercell[2], bbox, bbox_offset, camera_rot,
            out_file=output_file, add_path=addons_path, mod_path=modules_path)
 
     with open(python_tmp_file, 'w') as f:
@@ -105,11 +105,14 @@ if __name__ == "__main__":
                         help="Hide bounding box")
     parser.add_argument("--box_position", nargs=3, type=float, default=(0,0,0),
                         help="Bounding box position (lattice coordinates)")
+    parser.add_argument("--camera_rot", type=float, default=0,
+                        help="Camera rotation in degrees")
 
     args = parser.parse_args()
 
     main(args.input_file, blender_bin=args.blender_bin, mode_index=args.mode_index, supercell=args.supercell_dimensions,
          animate=(not args.static), n_frames=args.n_frames, scale_factor=args.scale_factor,
          vib_magnitude=args.vib_magnitude, arrow_magnitude=args.arrow_magnitude,
-         vectors=args.vectors, output_file=args.output_file, gif=args.gif, bbox=(not args.no_box), bbox_offset=args.box_position)
+         vectors=args.vectors, output_file=args.output_file, gif=args.gif,
+         bbox=(not args.no_box), bbox_offset=args.box_position, camera_rot=args.camera_rot)
 
