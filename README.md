@@ -2,6 +2,8 @@
 
 Visualisation of crystal vibrations with Blender.
 
+[![Documentation Status](https://readthedocs.org/projects/ascii-phonons/badge/?version=latest)](http://ascii-phonons.readthedocs.org/en/latest/?badge=latest)
+
 Visualisation is a powerful tool for the study of vibrations in the solid state.
 "Semi-automatic" animations have been generated for scientific publications, where they provide insight to spectroscopic observations.\[[1][Skelton2015],[2][Brivio2015]\] (Images [1](http://dx.doi.org/10.1063/1.4917044.1), [2](http://people.bath.ac.uk/aw558/temp/mapi_phonon.gif).) In order to make this type of imagery more accessible, and add some visual interest to [ajjackson](https://github.com/ajjackson)'s PhD thesis, a more convenient and automatic toolchain is desirable.
 
