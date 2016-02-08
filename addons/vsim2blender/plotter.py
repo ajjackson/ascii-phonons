@@ -306,12 +306,12 @@ def render(scene=False,output_file=False):
         if not scene:
             scene = bpy.context.scene.name
 
-    # Set output path (No sanitising or absolutising at this stage)
-    bpy.data.scenes[scene].render.filepath=output_file
+        # Set output path (No sanitising or absolutising at this stage)
+        bpy.data.scenes[scene].render.filepath=output_file
 
-    # Work out if animation or still is required
+        # Work out if animation or still is required
 
-    animate = (bpy.data.scenes[scene].frame_start != bpy.data.scenes[scene].frame_end)
+        animate = (bpy.data.scenes[scene].frame_start != bpy.data.scenes[scene].frame_end)
 
-    # Render!
-    bpy.ops.render.render(animation=animate, write_still=(not animate), scene=scene)
+        # Render!
+        bpy.ops.render.render(animation=animate, write_still=(not animate), scene=scene)

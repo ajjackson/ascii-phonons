@@ -72,7 +72,10 @@ vsim2blender.plotter.render(output_file='{out_file}')
     if gif and output_file:
         tmp_files = [image_tmp_filename + '{0:04.0f}'.format(i) + '.png' for i in range(n_frames)]
         convert_call_args = ['convert', '-delay', '10'] + tmp_files + ['-loop', '0', gif_name]
-        call(convert_call_args)
+        try:
+            call(convert_call_args)
+        except:
+            pass
         for f in tmp_files:
             os.remove(f)
         
