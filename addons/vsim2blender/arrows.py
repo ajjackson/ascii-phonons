@@ -19,29 +19,20 @@ def add_arrow(loc=[0,0,0], rot_euler=False, scale=1, mass=1):
     arrow.scale = [scale]*3 # Scale uniformly to reflect magnitude
     arrow.name = 'Arrow.{0}'.format(time.time()) # This is a hack to give arrows unique names. There should be a better solution.
 
-def vector_to_euler(vector):
-    """ Workings are in my ipython notebooks!
+def norm(*args):
+    assert len(args) > 0
+    sqargs = [x**2 for x in args]
+    return sqrt(sum(sqargs))
 
-        Vector ratios can go infinite so need to check and apply lim(x->infty)[tanx] = pi/2
+def vector_to_euler(vector):
+    """ Euler rotations to bring arrow along (1,0,0) to line up with vector
 
     """
     if len(vector) != 3:
         raise Exception("Need 3 coordinates")
     a, b, c = (float(x) for x in vector)
 
-    if a == 0.0:
-        theta_z = pi/2.
-    else:
-        theta_z = atan2(b,a)
+    theta_y = atan2(-c, norm(a,b))
+    theta_z = atan2(b,a)
 
-    if b == 0.0:
-        theta_y = 0
-    elif b == 0.0 and c == 0.0:
-        theta_y = 0 # Hopefully these conditions mean theta_y is arbitrary...
-    elif c == 0.0:
-        theta_y = pi/2.
-    else:
-        theta_y = atan2(b,(c*sin(theta_z)))
-    m = c / cos(theta_y)
-    #print([0,theta_y, theta_z])
     return [0, theta_y, theta_z]
