@@ -19,7 +19,7 @@ up-to-date position of atom :math:`j` in cell :math:`l` in a given mode visualis
 
 .. math::
 
-   \mathbf{r^\prime}(jl,t,\nu) = \mathbf{r}r(jl) + \mathbf{U}(j,\mathbf{q},\nu) \exp(i[\mathbf{q r}(jl) - \omega (\mathbf{k},\nu) t])
+   \mathbf{r^\prime}(jl,t,\nu) = \mathbf{r}(jl) + \mathbf{U}(j,\mathbf{q},\nu) \exp(i[\mathbf{q r}(jl) - \omega (\mathbf{k},\nu) t])
 
 Our unit of time should be such that a full cycle elapses over the
 desired number of frames. 
