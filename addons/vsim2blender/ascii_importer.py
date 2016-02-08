@@ -1,11 +1,43 @@
 #! /usr/bin/env python3
+"""
+Functions relating to the import of v_sim ascii files
+"""
 
 import re 
 from collections import namedtuple
 from mathutils import Vector
-Mode = namedtuple('Mode', 'freq qpt vectors')
+
+class Mode(namedtuple('Mode', 'freq qpt vectors')):
+    """
+    Collection of vibrational mode data imported from a v_sim ascii file
+
+    :param freq: Vibrational frequency
+    :type freq: float
+    :param qpt: **q**-point of mode
+    :type qpt: 3-list of reciprocal space coordinates
+    :param vectors: Eigenvectors
+    :type vectors: Nested list; 3-lists of complex numbers corresponding to atoms
+    """
+    pass
 
 def import_vsim(filename):
+    """
+    Import data from v_sim ascii file, including lattice vectors, atomic positions and phonon modes
+
+    :param filename: Path to .ascii file
+
+    :returns: cell_vsim, positions, symbols, vibs
+
+    :return cell_vsim: Lattice vectors in v_sim format
+    :rtype: 2x3 nested lists of floats
+    :return positions: Atomic positions
+    :rtype: list of 3-Vectors
+    :return symbols:   Symbols corresponding to atomic positions
+    :rtype: list of strings
+    :return vibs:      Vibrations
+    :rtype: list of "Mode" namedtuples
+
+    """
     with open(filename,'r') as f:
         f.readline() # Skip header
         # Read in lattice vectors (2-row format) and cast as floats
@@ -53,6 +85,11 @@ def import_vsim(filename):
 def _check_if_reduced(filename):
     """
     Scan a .ascii file for the "reduced" keyword
+
+    :params filename: v_sim .ascii file to check
+    :type filename: float
+
+    :returns: Boolean
     """
     with open(filename,'r') as f:
         f.readline() # Skip header
@@ -63,6 +100,17 @@ def _check_if_reduced(filename):
             return False
 
 def _reduced_to_cartesian(positions, cell_vsim):
+    """
+    Convert a set of atomic positions in lattice vector units to Cartesian coordinates
+
+    :param positions: Atomic positions in reduced coordinates
+    :type positions: List of 3-tuples/lists/Vectors
+    :param cell_vsim: Lattice vectors in v_sim (6-value) format
+    :format cell_vsim: 2x3 nested lists
+
+    :returns: Atomic positions in Cartesian coordinates
+    :rtype: List of 3-Vectors
+    """
     lattice_vectors = cell_vsim_to_vectors(cell_vsim)
     cartesian_positions = []
     for position in positions:
@@ -73,6 +121,15 @@ def _reduced_to_cartesian(positions, cell_vsim):
     return cartesian_positions
 
 def cell_vsim_to_vectors(cell_vsim):
+    """
+    Convert between v_sim 6-value lattice vector format (`ref <http://inac.cea.fr/L_Sim/V_Sim/sample.html>`_) and set of three Cartesian vectors
+
+    :param cell_vsim: Lattice vectors in v_sim format
+    :type cell_vsim: 2x3 nested lists
+
+    :returns: Cartesian lattice vectors
+    :rtype: 3-list of 3-Vectors
+    """
     dxx, dyx, dyy = cell_vsim[0]
     dzx, dzy, dzz = cell_vsim[1]
     return [Vector([dxx, 0., 0.]),

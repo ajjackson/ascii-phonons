@@ -11,6 +11,13 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   Introduction
+   Installation
+   CLI
+   GUI
+   bpy
+   Development
+   License
 
 
 Indices and tables

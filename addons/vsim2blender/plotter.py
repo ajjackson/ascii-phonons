@@ -19,6 +19,14 @@ script_directory = os.path.dirname(__file__)
 defaults_table_file = script_directory + '/periodic_table.yaml'
 
 def draw_bounding_box(cell, offset=(0,0,0)):
+    """
+    Draw unit cell bounding box
+
+    :param cell: Lattice vectors
+    :type cell: 3-tuple of 3-Vectors
+    :param offset: Location offset from origin
+    :type offset: 3-tuple in lattice coordinates
+    """
     a, b, c = cell
     verts = [tuple(x) for x in [(0,0,0), a, a+b, b, c, c+a, c+a+b, c+b]]
     faces = [(0,1,2,3), (0,1,5,4), (1,2,6,5), (2,3,7,6), (3,0,4,7), (4,5,6,7)]
@@ -42,9 +50,12 @@ def init_material(symbol, col=False, shadeless=True):
     """
     Create material if non-existent. Assign a random colour if none is specified.
 
-    Arguments:
-        col: 3-tuple or list containing RGB color. If False, use a random colour.
-        shadeless: Boolean; Enable set_shadeless parameter. Informally known as "lights out".
+    :param col: RGB color. If False, use a random colour.
+    :type col: 3-tuple, list or Boolean False
+    :param shadeless: Enable set_shadeless material parameter. Informally known as "lights out".
+    :type shadeless: Boolean
+
+    :returns: bpy material object
     """
 
     if symbol in bpy.data.materials.keys():
@@ -61,13 +72,19 @@ def absolute_position(position, lattice_vectors=[1.,1.,1.], cell_id=[0,0,0], red
     """
     Calculate the absolute position of an atom in a supercell array
 
-    Arguments:
-        position: 3-tuple, list or vector containing atom coordinates. Units same as unit cell unless reduced=True
-        lattice_vectors: 3-tuple or list containing Vectors specifying lattice bounding box/repeating unit
-        cell_id: 3-tuple of integers, indexing position of cell in supercell. (0,0,0) is the
+    :param position: atom coordinates. Units same as unit cell unless reduced=True
+    :type position: 3-tuple, list or vector
+    :param lattice_vectors: lattice bounding box/repeating unit
+    :type lattice_vectors: 3-tuple or list containing 3-Vectors
+    :param cell_id: position index of cell in supercell. (0,0,0) is the
             origin cell. Negative values are ok.
-        reduced: Boolean. If true, positions are taken to be in units of lattice vectors;
+    :type cell_id: 3-tuple of integers
+    :param reduced: If true, positions are taken to be in units of lattice vectors;
             if false, positions are taken to be Cartesian.
+    :type reduced: Boolean
+
+    :returns: cartesian_position
+    :rtype: 3-Vector
     """
     
     if reduced:
@@ -86,21 +103,31 @@ def add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), scale_factor=1.0, 
     """
     Add atom to scene
 
-    Arguments:
-        position: 3-tuple, list or vector containing atom coordinates. Units same as unit cell unless reduced=True
-        lattice_vectors: 3-tuple or list containing Vectors specifying lattice bounding box/repeating unit
-        symbol: chemical symbol. Used for colour and size lookup.
-        cell_id: 3-tuple of integers, indexing position of cell in supercell. (0,0,0) is the
+    :param position: Atom coordinates. Units same as unit cell unless reduced=True
+    :type position: 3-tuple, list or Vector
+    :param lattice_vectors: Vectors specifying lattice bounding box/repeating unit
+    :type  lattice_vectors: 3-tuple or list
+    :param symbol: Chemical symbol used for colour and size lookup.
+    :type symbol: String
+    :param cell_id: position index of cell in supercell. (0,0,0) is the
             origin cell. Negative values are ok.
-        scale_factor: master scale factor for atomic spheres
-        reduced: Boolean. If true, positions are taken to be in units of lattice vectors;
+    :type cell_id: 3-tuple of ints
+    :param scale_factor: master scale factor for atomic spheres
+    :type scale_factor: float
+    :param reduced: If true, positions are taken to be in units of lattice vectors;
             if false, positions are taken to be Cartesian.
-        yaml_file: If False, use colours and sizes from default periodic_table.yaml file.
+    :type reduced: Boolean
+    :param yaml_file: If False, use colours and sizes from default periodic_table.yaml file.
             If a string is provided, this is taken to be a YAML file in same format, values clobber defaults.
-        periodic_table: dict containing atomic radii and colours in format
+    :type yaml_file: String or Boolean False
+    :param periodic_table: Atomic radii and colours in format
             {'H':{'r': 0.31, 'col': [0.8, 0.8, 0.8]}, ...}. Takes
             priority over yaml_file and default table.
-        name: Label for atom object
+    :type periodic_table: Dict
+    :param name: Label for atom object
+    :type name: String
+
+    :returns: bpy object
     """
 
     cartesian_position = absolute_position(position, lattice_vectors=lattice_vectors, cell_id=cell_id, reduced=reduced)
@@ -172,13 +199,18 @@ def animate_atom_vibs(atom, qpt, displacement_vector, n_frames=30, magnitude=1.,
     """
     Apply vibrations as series of LOC keyframes
 
-    Arguments:
-        atom: bpy atom object
-        qpt: wave vector of mode in CARTESIAN COORDINATES
-        displacement_vector: complex vector describing relative displacement of atom
-        n_frames: total number of animation frames. Animation will run from frame 0 to n_frames-1.
-        magnitude: Scale factor for vibrations.
-        mass: Relative atomic mass (inverse sqrt is used to scale vibration magnitude.)
+    :param atom: Target atom
+    :type atom: bpy Object
+    :param qpt: wave vector of mode in *Cartesian coordinates*
+    :type qpt: 3-Vector
+    :param displacement_vector: complex vector describing relative displacement of atom
+    :type displacement_vector: 3-tuple of Complex numbers
+    :param n_frames: total number of animation frames. Animation will run from frame 0 to n_frames-1.
+    :type n_frames: int
+    :param magnitude: Scale factor for vibrations.
+    :type magnitude: float
+    :param mass: Relative atomic mass (inverse sqrt is used to scale vibration magnitude.)
+    :type mass: float
     """
 
     r = atom.location
@@ -190,14 +222,18 @@ def animate_atom_vibs(atom, qpt, displacement_vector, n_frames=30, magnitude=1.,
 
 def vector_with_phase(atom, qpt, displacement_vector):
     """
-    Calculate cartesian vector associated with atom vibrations
+    Calculate Cartesian vector associated with atom vibrations
 
-    Arguments:
-        atom: bpy atom object
-        qpt: wave vector of mode in CARTESIAN COORDINATES
-        displacement_vector: complex vector describing relative displacement of atom
-        n_frames: total number of animation frames. Animation will run from frame 0 to n_frames-1.
-        magnitude: Scale factor for vibrations.
+    :param atom: Target atom
+    :type atom: bpy Object
+    :param qpt: wave vector of mode in *Cartesian coordinates*
+    :type qpt: 3-Vector
+    :param displacement_vector: complex vector describing relative displacement of atom
+    :type displacement_vector: 3-tuple of Complex numbers
+    :param n_frames: total number of animation frames. Animation will run from frame 0 to n_frames-1.
+    :type n_frames: positive int
+    :param magnitude: Scale factor for vibrations.
+    :type magnitude: float
     """
     r = atom.location
     exponent = cmath.exp( complex(0,1) * (r.dot(qpt) - 0.25 * math.pi))
@@ -209,16 +245,24 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=
     """
     Open v_sim ascii file in Blender
 
-    Arguments:
-        ascii_file: Path to file
-        mode_index: integer id of mode; 0 corresponds to first mode in ascii file
-        supercell: 3-tuple or list of integer supercell dimensions
-        animate: Boolean: if True, add animation keyframes
-        n_frames: Animation length in frames
-        vectors: Boolean; if True, show arrows
-        bbox: Boolean; if True, show bounding box
-        bbox_loc: Vector or 3-tuple in lattice vector coordinates; position of bbox. Default (0,0,0) (Left front bottom)
-        camera_rot: Camera rotation in degrees
+    :param ascii_file: Path to file
+    :type ascii_file: str
+    :param mode_index: id of mode; 0 corresponds to first mode in ascii file
+    :type mode_index: int
+    :param supercell: supercell dimensions
+    :type supercell: 3-tuple or 3-list of ints
+    :param animate: if True, add animation keyframes
+    :type animate: Boolean 
+    :param n_frames: Animation length in frames
+    :type n_frames: Positive int
+    :param vectors: If True, show arrows
+    :type vectors: Boolean
+    :param bbox: If True, show bounding box
+    :type bbox: Boolean
+    :param bbox_loc: Position of bbox in lattice vector coordinates. Default (0,0,0) (Left front bottom)
+    :type bbox_loc: Vector or 3-tuple
+    :param camera_rot: Camera rotation in degrees
+    :type camera_rot: float
 
     """
 
@@ -290,11 +334,12 @@ def render(scene=False,output_file=False):
     """
     Render the scene
 
-    Arguments:
-        scene: Name of scene. If False, render active scene.
-        output_file: Blender-formatted output path/filename. If False, do not render.
+    :param scene: Name of scene. If False, render active scene.
+    :type scene: String or Boolean False
+    :param output_file: Blender-formatted output path/filename. If False, do not render.
             This is a useful fall-through as calls to render() can be harmlessly included
             in boilerplate.
+    :type output_file: String or Boolean False
 
     """
 

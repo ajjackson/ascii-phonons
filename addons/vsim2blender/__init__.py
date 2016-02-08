@@ -1,3 +1,13 @@
+"""
+.. module:: vsim2blender
+   :platform: Blender add-on
+   :synopsis: A module which interfaces with Blender to illustrate phonon modes.
+              Includes importer from v_sim ascii files, and routines to build and render a model.
+
+.. moduleauthor:: Adam J. Jackson
+
+"""
+
 bl_info = {
     "name": "ascii phonons",
     "description": "Generate phonon mode visualisations from ASCII input files",
