@@ -24,8 +24,8 @@ up-to-date position of atom :math:`j` in cell :math:`l` in a given mode visualis
 Our unit of time should be such that a full cycle elapses over the
 desired number of frames. 
 
-A full cycle usually lasts :math:`2\pi/\omega`, so let :math:`t = f*2*\pi/\omega N`;
-:math:`-\omega t` becomes :math:`-\omega 2 \pi f/\omega N = 2 pi f / N` where :math:`f` is the frame number.
+A full cycle usually lasts :math:`2\pi/\omega`, so let :math:`t = \frac{2\pi f}{\omega N}`;
+:math:`-\omega t` becomes :math:`-\omega \frac{2 \pi f}{\omega N} = 2 \pi f / N` where :math:`f` is the frame number.
 
 .. math::
 
