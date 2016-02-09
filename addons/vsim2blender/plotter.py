@@ -1,5 +1,4 @@
 import bpy
-import yaml
 import os
 import random
 # import sys
@@ -7,16 +6,14 @@ from mathutils import Vector, Matrix
 import math
 import cmath
 import itertools
-
+import vsim2blender
 # # Modify path to import stuff from other file
 
 # sys.path.insert(0, os.path.abspath(script_directory)+'/..')
 from vsim2blender.ascii_importer import import_vsim, cell_vsim_to_vectors
 from vsim2blender.arrows import add_arrow, vector_to_euler
-from vsim2blender.masses import mass_dict
 
 script_directory = os.path.dirname(__file__)
-defaults_table_file = script_directory + '/periodic_table.yaml'
 
 def draw_bounding_box(cell, offset=(0,0,0)):
     """
@@ -99,7 +96,7 @@ def absolute_position(position, lattice_vectors=[1.,1.,1.], cell_id=[0,0,0], red
     return cartesian_position
 
 def add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), scale_factor=1.0, reduced=False,
-             yaml_file=False,periodic_table=False, name=False):
+             name=False, config=False):
     """
     Add atom to scene
 
@@ -117,46 +114,27 @@ def add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), scale_factor=1.0, 
     :param reduced: If true, positions are taken to be in units of lattice vectors;
             if false, positions are taken to be Cartesian.
     :type reduced: Boolean
-    :param yaml_file: If False, use colours and sizes from default periodic_table.yaml file.
-            If a string is provided, this is taken to be a YAML file in same format, values clobber defaults.
-    :type yaml_file: String or Boolean False
-    :param periodic_table: Atomic radii and colours in format
-            {'H':{'r': 0.31, 'col': [0.8, 0.8, 0.8]}, ...}. Takes
-            priority over yaml_file and default table.
-    :type periodic_table: Dict
     :param name: Label for atom object
     :type name: String
+    :param config: Settings from configuration files (incl. atom colours and radii)
+    :type config: configparser.ConfigParser
+
 
     :returns: bpy object
     """
 
+    if not config:
+        config = vsim2blender.read_config()
+
     cartesian_position = absolute_position(position, lattice_vectors=lattice_vectors, cell_id=cell_id, reduced=reduced)
 
-    # Get colour. Priority order is 1. periodic_table dict 2. yaml_file 3. defaults_table
-    if yaml_file:
-        yaml_file_data = yaml.load(open(yaml_file))
+    # Get colour and atomic radius. Priority order is 1. User conf file 2. elements.conf
+    if symbol in config['colours']:
+        col=[float(x) for x in config['colours'][symbol].split()]
     else:
-        yaml_file_data = False
-
-    defaults_table = yaml.load(open(defaults_table_file))
-
-    if periodic_table and symbol in periodic_table and 'col' in periodic_table[symbol]:
-        col = periodic_table[symbol]['col']
-    elif yaml_file_data and symbol in yaml_file_data and 'col' in yaml_file_data[symbol]:
-        col = yaml_file_data[symbol]['col']
-    else:
-        if symbol in defaults_table and 'col' in defaults_table[symbol]:
-            col = defaults_table[symbol]['col']
-        else:
-            col=False        
-
-    # Get atomic radius. Priority order is 1. periodic_table dict 2. yaml_file 3. defaults_table
-    if periodic_table and symbol in periodic_table and 'r' in periodic_table[symbol]:
-        radius = periodic_table[symbol]['r']
-    elif yaml_file_data and symbol in yaml_file_data and 'r' in yaml_file_data[symbol]:
-        radius = yaml_file_data[symbol]['r']
-    elif symbol in defaults_table and 'r' in defaults_table[symbol]:
-        radius = defaults_table[symbol]['r']
+        col=False        
+    if symbol in config['radii']:
+        radius = float(config['radii'][symbol])
     else:
         radius = 1.0
 
@@ -241,7 +219,10 @@ def vector_with_phase(atom, qpt, displacement_vector):
     return arrow_end - r
 
 
-def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=30, vectors=False, bbox=True, bbox_offset=(0,0,0), scale_factor=1.0, vib_magnitude=1.0, arrow_magnitude=1.0, camera_rot=0.):
+def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
+              n_frames=30, vectors=False, bbox=True, bbox_offset=(0,0,0),
+              scale_factor=1.0, vib_magnitude=10.0, arrow_magnitude=1.0,
+              camera_rot=0., config=False):
     """
     Open v_sim ascii file in Blender
 
@@ -263,13 +244,18 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=
     :type bbox_loc: Vector or 3-tuple
     :param camera_rot: Camera rotation in degrees
     :type camera_rot: float
+    :param config: Settings from configuration files
+    :type config: configparser.ConfigParser
 
     """
+
+    if not config:
+        config = vsim2blender.read_config()
 
     vsim_cell, positions, symbols, vibs = import_vsim(ascii_file)
     lattice_vectors = cell_vsim_to_vectors(vsim_cell)
 
-    masses = [mass_dict[symbol] for symbol in symbols]
+    masses = [float(config['masses'][symbol]) for symbol in symbols]
         
     # Switch to a new empty scene
     bpy.ops.scene.new(type='EMPTY')
@@ -283,7 +269,7 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=
     for cell_id_tuple in itertools.product(range(supercell[0]),range(supercell[1]),range(supercell[2])):
         cell_id = Vector(cell_id_tuple)
         for atom_index, (position, symbol, mass) in enumerate(zip(positions, symbols, masses)):
-            atom = add_atom(position,lattice_vectors,symbol,cell_id=cell_id, name = '{0}_{1}_{2}{3}{4}'.format(atom_index,symbol,*cell_id_tuple), scale_factor=scale_factor)
+            atom = add_atom(position,lattice_vectors,symbol,cell_id=cell_id, name = '{0}_{1}_{2}{3}{4}'.format(atom_index,symbol,*cell_id_tuple), scale_factor=scale_factor, config=config)
             if animate or vectors:
                 displacement_vector = vibs[mode_index].vectors[atom_index]
                 qpt = vibs[mode_index].qpt
@@ -314,13 +300,15 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, n_frames=
     camera_loc=( camera_x,
                  1.05 * camera_y,
                 camera_z)
-    bpy.ops.object.camera_add(location=camera_loc,rotation=(math.pi/2,(2*math.pi/360.)*camera_rot,0))
+    bpy.ops.object.camera_add(location=camera_loc,
+                              rotation=(math.pi/2,(2*math.pi/360.)*camera_rot,0))
     camera = bpy.context.object
     bpy.context.scene.camera = camera
     bpy.data.cameras[camera.name].angle = field_of_view
 
     bpy.context.scene.world = bpy.data.worlds['World']
-    bpy.data.worlds['World'].horizon_color = [0.5, 0.5, 0.5]
+    bpy.data.worlds['World'].horizon_color = [float(x) for x in 
+                                              config['general']['background'].split()]
 
 def setup_render(n_frames=30):
     bpy.context.scene.render.resolution_x = 1080

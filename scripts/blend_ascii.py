@@ -44,18 +44,23 @@ import sys
 sys.path = {add_path} + {mod_path} + sys.path
 
 import bpy
+import vsim2blender
 import vsim2blender.plotter
+
+config = vsim2blender.read_config(user_config={config})
 
 vsim2blender.plotter.open_mode('{0}', {1}, animate={2}, n_frames={3},
                                 vectors={4}, scale_factor={5}, vib_magnitude={6},
                                 arrow_magnitude={7}, supercell=({8},{9},{10}),
-                                bbox={11}, bbox_offset={12}, camera_rot={13})
+                                bbox={11}, bbox_offset={12}, camera_rot={13},
+                                config=config)
 vsim2blender.plotter.setup_render(n_frames={3})
 vsim2blender.plotter.render(output_file='{out_file}')
 """.format(input_file, mode_index, animate, n_frames, vectors,
            scale_factor, vib_magnitude, arrow_magnitude,
            supercell[0], supercell[1], supercell[2], bbox, bbox_offset, camera_rot,
-           out_file=output_file, add_path=addons_path, mod_path=modules_path)
+           out_file=output_file, add_path=addons_path, mod_path=modules_path,
+           config=user_config)
 
     with open(python_tmp_file, 'w') as f:
         f.write(python_txt)
@@ -100,7 +105,7 @@ if __name__ == "__main__":
     parser.add_argument("-v","--vectors", action="store_true", help="Indicate eigenvectors with static arrows.")
     parser.add_argument("--scale_factor", type=float, default=1.0,
                         help="Size of atoms, relative to covalent radius")
-    parser.add_argument("--vib_magnitude", type=float, default=1.0,
+    parser.add_argument("--vib_magnitude", type=float, default=10.0,
                         help="Normalised magnitude of animated phonons")
     parser.add_argument("--arrow_magnitude", type=float, default=10.0,
                         help="Normalised magnitude of static arrows")
@@ -110,8 +115,16 @@ if __name__ == "__main__":
                         help="Bounding box position (lattice coordinates)")
     parser.add_argument("--camera_rot", type=float, default=0,
                         help="Camera rotation in degrees")
+    parser.add_argument("--config", type=str, default='None',
+                        help="User configuration file")
 
     args = parser.parse_args()
+
+    # Quote config file name
+    if args.config == 'None':
+        user_config = 'False'
+    else:
+        user_config = '\'' + args.config + '\''
 
     main(args.input_file, blender_bin=args.blender_bin, mode_index=args.mode_index, supercell=args.supercell_dimensions,
          animate=(not args.static), n_frames=args.n_frames, scale_factor=args.scale_factor,
