@@ -3,8 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to ascii-phonons's documentation!
-=========================================
+ascii-phonons: Documentation
+============================
+
+.. figure:: ../images/comof_phonon.gif
+   :align: center
 
 Contents:
 
@@ -16,6 +19,7 @@ Contents:
    CLI
    GUI
    bpy
+   Config
    Development
    License
 

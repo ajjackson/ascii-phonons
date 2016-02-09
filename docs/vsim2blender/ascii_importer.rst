@@ -1,4 +1,4 @@
-ascii file importer
+Ascii file importer
 ===================
 .. automodule:: ascii_importer
    :members:

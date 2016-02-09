@@ -3,8 +3,8 @@ Plotter
 
 Commands for adding atoms to the scene and animating them.
 
-Animation
----------
+Mathematics
+-----------
 
 The key equation is: [1]_
 
