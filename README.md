@@ -39,16 +39,21 @@ The target platforms are modern GNU/Linux distributions and Mac OS X. Windows su
 
 ## Setup
 
-The simplest way to set up this code at the moment is
+The simplest way to get up and running is
 
-1. Download the code with `git clone git@github.com:ajjackson/ascii-phonons`
-2. Setup pyyaml for Blender's python3
-    - On a Debian or Ubuntu system with sudo privileges, just `apt-get install python3-yaml`.
-    - Otherwise, get pyyaml from http://pyyaml.org and create a simlink to the modules directory in this code with `ln -s /path/to/pyyaml/lib3/yaml /path/to/ascii-phonons/modules/`.
-      You can get faster performance by building with the bindings to libyaml, which is written in C, but this isn't necessary for the simple YAML files used in this project.
-    
-Eventually this will be implemented as a proper Blender add-on, and users will need to follow the Blender procedure for installing from a .zip file.
-In the mean time, the wrapper script sets the paths for you.
+1. Install [Blender](http://www.blender.org/download) (available in all good package managers).
+2. Download the code:
+   - either clone the repository with `git clone git@github.com:ajjackson/ascii-phonons`
+   - or download the latest version as a [zip file](https://github.com/ajjackson/ascii-phonons/archive/master.zip).
+
+## Requirements
+
+- Some means of generating .ascii files. We like [Phonopy](http://phonopy.sourceforge.net).
+- A recent version of Blender; development is currently with
+  Blender 2.73 and later, although some effort exists to preserve compatibility with earlier versions.
+  [Ubuntu repositories are often quite far behind...]
+- [Imagemagick](http://www.imagemagick.org) tools (specifically "convert" and "montage") are used for image conversion and tiling.
+  This is available in most package managers and may even be pre-installed with your Unix-like operating system.
 
 ## Using the wrapper script
 
@@ -56,7 +61,7 @@ At the moment the most sane way to work with this is to use the wrapper **script
 
     python blend_ascii.py -h
 
-for information about the numerous command-line arguments.
+for information about the numerous command-line arguments, or take a look at the [fancy online documentation](http://ascii-phonons.readthedocs.org/en/latest/CLI.html).
 
 If working on Mac OS X, you may need to specify the path to your Blender binary, which is tucked away in a .app package, using the `-b` flag.
 However, the script assumes you have Blender installed in a folder called "Blender" in the root Applications folder, and should find your binary in this case.
@@ -72,20 +77,15 @@ To generate an animation, try
 
 which will use Imagemagick to generate **pretty.gif**.
 
-## Requirements
-
-- Some means of generating .ascii files. We like [Phonopy](http://phonopy.sourceforge.net).
-- A recent version of Blender; development is currently with
-  Blender 2.73 and later, although some effort exists to preserve compatibility with earlier versions.
-  [Ubuntu repositories are often quite far behind...]
-- A Python 3-compatible and Blender-accesible version of pyyaml.
-- [Imagemagick](http://www.imagemagick.org) tools (specifically "convert" and "montage") are used for image conversion and tiling.
-  This is available in most package managers and may even be pre-installed with your Unix-like operating system.
-
 ## Implementation details
 
 The default atomic radii are the covalent radii from [Cordero *et al* (2008)][Cordero2008].
 The eigenvectors are scaled by the square root of the relative atomic mass; the atomic mass data is from [Coursey *et al.* (2015)][Coursey2015].
+
+## Acknowledgements
+
+Work on this package began while [ajjackon](https://github.com/ajjackson) was a PhD student funded by [EPSRC](https://www.epsrc.ac.uk/) through the [Center for Sustainable Chemical Technologies](http://www.bath.ac.uk/csct) (grant no. [EP/G03768X/1](http://gow.epsrc.ac.uk/NGBOViewGrant.aspx?GrantRef=EP/G03768X/1)) at the University of Bath.
+Further work to fix bugs and improve the documentation and useability has taken place as a Research Assistant the same [research group](https://wmd-group.github.io), while funded by the [ERC](https://erc.europa.eu) ([project 277757](http://cordis.europa.eu/project/rcn/100807_en.html)).
 
 ## License
 

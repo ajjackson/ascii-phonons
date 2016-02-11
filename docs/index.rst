@@ -22,6 +22,7 @@ Contents:
    Config
    Development
    License
+   Acknowledgments
 
 
 Indices and tables
