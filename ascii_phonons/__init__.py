@@ -7,9 +7,9 @@ ascii_phonons_path = os.path.abspath(os.path.join(
 addons_path = os.path.join(ascii_phonons_path, 'addons')
 
 def call_blender(input_file, blender_bin=False, mode_index=0, supercell=(2,2,2),
-         animate=True, n_frames=30, bbox=True, bbox_offset=(0,0,0),
+         animate=True, n_frames=30, start_frame=None, end_frame=None, bbox=True, bbox_offset=(0,0,0),
          vectors=False, output_file=False, vib_magnitude=1.0, arrow_magnitude=1.0,
-         gui=False, gif=False, scale_factor=1.0, camera_rot=0., user_config=False):
+         gui=False, gif=False, scale_factor=1.0, camera_rot=0., user_config=False, preview=False):
     input_file = os.path.abspath(input_file)
     if output_file:
         output_file = os.path.abspath(output_file)
@@ -33,7 +33,16 @@ def call_blender(input_file, blender_bin=False, mode_index=0, supercell=(2,2,2),
         handle, image_tmp_filename = tempfile.mkstemp(dir='.')
         output_file = image_tmp_filename
         os.remove(image_tmp_filename) # We only needed the name
-    
+
+    for frame in start_frame, end_frame:
+        if frame == None:
+            frame = 'None'
+
+    if preview and type(preview) == str:
+        preview = '\'' + preview + '\''
+    else:
+        preview = 'False'
+            
     python_txt = """
 import sys
 from os.path import pathsep
@@ -50,14 +59,16 @@ vsim2blender.plotter.open_mode('{0}', {1}, animate={2}, n_frames={3},
                                 vectors={4}, scale_factor={5}, vib_magnitude={6},
                                 arrow_magnitude={7}, supercell=({8},{9},{10}),
                                 bbox={11}, bbox_offset={12}, camera_rot={13},
-                                config=config)
-vsim2blender.plotter.setup_render(n_frames={3})
+                                config=config, start_frame={start_frame}, end_frame={end_frame},
+                                preview={preview})
+vsim2blender.plotter.setup_render(n_frames={3}, start_frame={start_frame}, end_frame={end_frame})
 vsim2blender.plotter.render(output_file='{out_file}')
 """.format(input_file, mode_index, animate, n_frames, vectors,
            scale_factor, vib_magnitude, arrow_magnitude,
            supercell[0], supercell[1], supercell[2], bbox, bbox_offset, camera_rot,
            out_file=output_file, add_path=addons_path,
-           config=user_config)
+           config=user_config, start_frame=start_frame, end_frame=end_frame,
+           preview=preview)
 
     with open(python_tmp_file, 'w') as f:
         f.write(python_txt)

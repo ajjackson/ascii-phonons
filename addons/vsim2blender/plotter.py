@@ -173,7 +173,9 @@ def add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), scale_factor=1.0, 
 # The arrows for static images are defined as the vectors from the
 # initial (average) positions to one quarter of the vibrational period (i.e. max displacement)
 
-def animate_atom_vibs(atom, qpt, displacement_vector, n_frames=30, magnitude=1., mass=1):
+def animate_atom_vibs(atom, qpt, displacement_vector,
+                      n_frames=30, start_frame=0, end_frame=None,
+                      magnitude=1., mass=1):
     """
     Apply vibrations as series of LOC keyframes
 
@@ -192,7 +194,10 @@ def animate_atom_vibs(atom, qpt, displacement_vector, n_frames=30, magnitude=1.,
     """
 
     r = atom.location
-    for frame in range(n_frames):
+
+    if type(end_frame) != int:
+        end_frame = start_frame + n_frames - 1
+    for frame in range(start_frame, end_frame+1):
         bpy.context.scene.frame_set(frame)
         exponent = cmath.exp( complex(0,1) * (r.dot(qpt) - 2 * math.pi*frame/n_frames))
         atom.location = r + mass**-.5 * magnitude * Vector([x.real for x in [x * exponent for x in displacement_vector]])
@@ -222,7 +227,7 @@ def vector_with_phase(atom, qpt, displacement_vector):
 def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
               n_frames=30, vectors=False, bbox=True, bbox_offset=(0,0,0),
               scale_factor=1.0, vib_magnitude=10.0, arrow_magnitude=1.0,
-              camera_rot=0., config=False):
+              camera_rot=0., config=False, start_frame=None, end_frame=None):
     """
     Open v_sim ascii file in Blender
 
@@ -234,8 +239,12 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
     :type supercell: 3-tuple or 3-list of ints
     :param animate: if True, add animation keyframes
     :type animate: Boolean 
-    :param n_frames: Animation length in frames
+    :param n_frames: Animation length of a single oscillation cycle in frames
     :type n_frames: Positive int
+    :param start_frame: The starting frame number of the rendered animation (default=0)
+    :type start_frame: int or None
+    :param end_frame: The ending frame number of the rendered animation (default=start_frame+n_frames-1)
+    :type end_frame: int or None
     :param vectors: If True, show arrows
     :type vectors: Boolean
     :param bbox: If True, show bounding box
@@ -251,6 +260,11 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
 
     if not config:
         config = vsim2blender.read_config()
+
+    if type(start_frame) != int:
+        start_frame = 0
+    if type(end_frame) != int:
+        end_frame = start_frame + n_frames - 1
 
     vsim_cell, positions, symbols, vibs = import_vsim(ascii_file)
     lattice_vectors = cell_vsim_to_vectors(vsim_cell)
@@ -278,7 +292,8 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
             
             if animate:
                 animate_atom_vibs(atom, qpt_cartesian, displacement_vector,
-                                  n_frames=n_frames, magnitude=vib_magnitude, mass=mass)
+                                  start_frame=start_frame, end_frame=end_frame, n_frames=n_frames,
+                                  magnitude=vib_magnitude, mass=mass)
             if vectors:
                 arrow_vector=vector_with_phase(atom, qpt_cartesian, displacement_vector)
                 add_arrow(loc=absolute_position(position, lattice_vectors=lattice_vectors,
@@ -310,13 +325,15 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
     bpy.data.worlds['World'].horizon_color = [float(x) for x in 
                                               config['general']['background'].split()]
 
-def setup_render(n_frames=30):
+def setup_render(start_frame=0, end_frame=None, n_frames=30):
+    if type(end_frame) != int:
+        end_frame = start_frame + n_frames - 1
     bpy.context.scene.render.resolution_x = 1080
     bpy.context.scene.render.resolution_y = 1080
     bpy.context.scene.render.resolution_percentage = 50
     bpy.context.scene.render.use_edge_enhance = True
-    bpy.context.scene.frame_start = 0
-    bpy.context.scene.frame_end = (n_frames-1)
+    bpy.context.scene.frame_start = start_frame
+    bpy.context.scene.frame_end = end_frame
 
 def render(scene=False,output_file=False):
     """

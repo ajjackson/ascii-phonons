@@ -17,7 +17,11 @@ if __name__ == "__main__":
     parser.add_argument("-s","--static", action="store_true",
                         help="Static image (disable animation)")
     parser.add_argument("-f","--n_frames", type=int, default=30,
-                        help="Number of frames in animation")
+                        help="Number of frames in a complete cycle (default number of frames for animation)")
+    parser.add_argument("--start_frame", type=int, default=None,
+                        help="Starting frame number for the animation")
+    parser.add_argument("--end_frame", type=int, default=None,
+                        help="Ending frame number for the animation")
     parser.add_argument("-o","--output_file", default=False,
                         help="Render to output. GUI will not open for further editing unless -g (--gui) flag is used")
     parser.add_argument("-g", "--gui", action="store_true", help="Open full Blender GUI session, even if rendering output")
@@ -50,6 +54,8 @@ if __name__ == "__main__":
          blender_bin=args.blender_bin, mode_index=args.mode_index,
          supercell=args.supercell_dimensions, animate=(not
          args.static), n_frames=args.n_frames,
+         start_frame=args.start_frame,
+         end_frame=args.end_frame,
          scale_factor=args.scale_factor,
          vib_magnitude=args.vib_magnitude,
          arrow_magnitude=args.arrow_magnitude, vectors=args.vectors,
