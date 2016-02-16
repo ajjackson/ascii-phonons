@@ -61,8 +61,8 @@ vsim2blender.plotter.open_mode('{0}', {1}, animate={2}, n_frames={3},
                                 bbox={11}, bbox_offset={12}, camera_rot={13},
                                 config=config, start_frame={start_frame}, end_frame={end_frame},
                                 preview={preview})
-vsim2blender.plotter.setup_render(n_frames={3}, start_frame={start_frame}, end_frame={end_frame})
-vsim2blender.plotter.render(output_file='{out_file}')
+vsim2blender.plotter.setup_render(n_frames={3}, start_frame={start_frame}, end_frame={end_frame}, preview={preview})
+vsim2blender.plotter.render(output_file='{out_file}', preview={preview})
 """.format(input_file, mode_index, animate, n_frames, vectors,
            scale_factor, vib_magnitude, arrow_magnitude,
            supercell[0], supercell[1], supercell[2], bbox, bbox_offset, camera_rot,

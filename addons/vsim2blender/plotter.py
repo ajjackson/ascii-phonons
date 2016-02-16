@@ -227,7 +227,8 @@ def vector_with_phase(atom, qpt, displacement_vector):
 def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
               n_frames=30, vectors=False, bbox=True, bbox_offset=(0,0,0),
               scale_factor=1.0, vib_magnitude=10.0, arrow_magnitude=1.0,
-              camera_rot=0., config=False, start_frame=None, end_frame=None):
+              camera_rot=0., config=False, start_frame=None, end_frame=None,
+              preview=False):
     """
     Open v_sim ascii file in Blender
 
@@ -263,7 +264,9 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
 
     if type(start_frame) != int:
         start_frame = 0
-    if type(end_frame) != int:
+    if preview:
+        end_frame = start_frame        
+    elif type(end_frame) != int:
         end_frame = start_frame + n_frames - 1
 
     vsim_cell, positions, symbols, vibs = import_vsim(ascii_file)
@@ -325,17 +328,35 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
     bpy.data.worlds['World'].horizon_color = [float(x) for x in 
                                               config['general']['background'].split()]
 
-def setup_render(start_frame=0, end_frame=None, n_frames=30):
-    if type(end_frame) != int:
+def setup_render(start_frame=0, end_frame=None, n_frames=30, preview=False):
+    """
+    Setup the render setting
+    
+    :param n_frames: Animation length of a single oscillation cycle in frames
+    :type n_frames: Positive int
+    :param start_frame: The starting frame number of the rendered animation (default=0)
+    :type start_frame: int or None
+    :param end_frame: The ending frame number of the rendered animation (default=start_frame+n_frames-1)
+    :type end_frame: int or None
+    :param preview: Write to a temporary preview file at low resolution instead of the output. Use first frame only.
+    :type preview: str or Boolean False    
+
+    """
+    if preview:
+        end_frame = start_frame
+    elif type(end_frame) != int:
         end_frame = start_frame + n_frames - 1
     bpy.context.scene.render.resolution_x = 1080
     bpy.context.scene.render.resolution_y = 1080
-    bpy.context.scene.render.resolution_percentage = 50
+    if preview:
+        bpy.context.scene.render.resolution_percentage = 20
+    else:
+        bpy.context.scene.render.resolution_percentage = 50        
     bpy.context.scene.render.use_edge_enhance = True
     bpy.context.scene.frame_start = start_frame
     bpy.context.scene.frame_end = end_frame
 
-def render(scene=False,output_file=False):
+def render(scene=False, output_file=False, preview=False):
     """
     Render the scene
 
@@ -345,6 +366,8 @@ def render(scene=False,output_file=False):
             This is a useful fall-through as calls to render() can be harmlessly included
             in boilerplate.
     :type output_file: String or Boolean False
+    :param preview: Write to a temporary preview file at low resolution instead of the output
+    :type preview: str or Boolean False    
 
     """
 
@@ -356,6 +379,8 @@ def render(scene=False,output_file=False):
             scene = bpy.context.scene.name
 
         # Set output path (No sanitising or absolutising at this stage)
+        if preview:
+            output_file = preview        
         bpy.data.scenes[scene].render.filepath=output_file
 
         # Work out if animation or still is required

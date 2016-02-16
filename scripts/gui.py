@@ -2,7 +2,8 @@
 
 from __future__ import print_function
 import ascii_phonons
-from os.path import isdir
+from os.path import isdir, join
+import tempfile
 
 from sys import version_info
 if version_info.major > 2:
@@ -12,19 +13,21 @@ else:
     import Tkinter as tk
     import tkFileDialog as filedialog
 
-from PIL import ImageTk, Image
+from PIL import ImageTk
 
+preview_placeholder = join(ascii_phonons.ascii_phonons_path, 'images', 'preview.png')
 
 class Application(tk.Frame):
     
     def __init__(self, master):
-        button_defaults={'fill': "x", 'padx': 10, 'pady': 10}
+        self.button_defaults={'fill': "x", 'padx': 10, 'pady': 10}
 
+        # Setup files and paths
         self.input_file = ''
-        self.call_blender_args = {}
-
         self.output_file = tk.StringVar(value='phonon')
+        _, self.preview_file = tempfile.mkstemp(dir=tempfile.gettempdir())
 
+        self.call_blender_args = {}
         self.start_frame = tk.IntVar(value=0)
         self.end_frame = tk.IntVar(value=29)
         self.n_frames = tk.IntVar(value=30)
@@ -38,14 +41,53 @@ class Application(tk.Frame):
 
 
         self.LeftRightFrames = tk.Frame(self)
-        self.LeftFrame = tk.Frame(self.LeftRightFrames, borderwidth=2, bg="red")
-        self.RightFrame = tk.Frame(self.LeftRightFrames, borderwidth=2, bg="green")
-        tk.Label(self.LeftFrame, text="Left frame").pack(side="top")
-        tk.Label(self.RightFrame, text="Right frame").pack(side="top")
+        self.LeftFrame = tk.Frame(self.LeftRightFrames)
+        self.RightFrame = tk.Frame(self.LeftRightFrames)
 
         tk.Button(self.LeftFrame, text='Open ASCII file',
-                  command=self.askinputfilename).pack(side="top", **button_defaults)
+                  command=self.askinputfilename).pack(side="top", **self.button_defaults)
 
+        self.add_cell_row()
+
+        self.add_frame_row()
+
+        self.add_render_row()
+        
+
+        # Setup preview panel
+        self.preview_label = tk.Label(self.RightFrame)        
+        self.preview_placeholder_pil = ImageTk.Image.open(preview_placeholder)
+        self.preview_placeholder_tk = ImageTk.PhotoImage(self.preview_placeholder_pil)
+        self.preview_label.configure(image=self.preview_placeholder_tk)        
+        self.preview_label.pack()
+
+        self.LeftRightFrames.pack(side="top", expand="yes", fill="x")
+        self.LeftFrame.pack(side="left", expand="yes", fill="x")
+        self.RightFrame.pack(side="right")
+
+        self.pack(side=tk.TOP, expand="yes", fill="both")
+
+    def add_cell_row(self):
+
+        self.supercell_X = tk.IntVar(value=2)
+        self.supercell_Y = tk.IntVar(value=2)
+        self.supercell_Z = tk.IntVar(value=2)
+        self.unitcell_X = tk.DoubleVar(value=0.0)
+        self.unitcell_Y = tk.DoubleVar(value=0.0)
+        self.unitcell_Z = tk.DoubleVar(value=0.0)            
+
+        SupercellRow = tk.Frame(self.LeftFrame)
+        tk.Label(SupercellRow, text='Supercell').pack(side="left")
+        for field in self.supercell_X, self.supercell_Y, self.supercell_Z:
+            tk.Entry(SupercellRow, textvariable=field, width=2).pack(side="left")
+        tk.Label(SupercellRow, text='Bounding box location').pack(side="left")
+        for field in self.unitcell_X, self.unitcell_Y, self.unitcell_Z:
+            tk.Entry(SupercellRow, textvariable=field, width=3).pack(side="left")
+            
+        SupercellRow.pack(side="top")
+        
+
+    def add_frame_row(self):
         FrameRow = tk.Frame(self.LeftFrame)
         tk.Label(FrameRow, text='Frame range').pack(side="left")
         tk.Entry(FrameRow, textvariable=self.start_frame, width=3).pack(side="left")
@@ -54,17 +96,14 @@ class Application(tk.Frame):
         tk.Entry(FrameRow, textvariable=self.n_frames, width=3).pack(side="left")
         FrameRow.pack(side="top")
 
+    def add_render_row(self):
         self.RenderRow = tk.Frame(self.LeftFrame)
-        tk.Button(self.RenderRow, text='Output file', command=self.askoutputfilename).pack(side="left", **button_defaults)
+        tk.Button(self.RenderRow, text='Output file', command=self.askoutputfilename).pack(side="left", **self.button_defaults)
         self.output_file_entry = tk.Entry(self.RenderRow, textvariable=self.output_file).pack(side="left", expand="yes", fill="x")
-        tk.Button(self.RenderRow, text='Render', command=self.render).pack(side="right", **button_defaults)
+        tk.Button(self.RenderRow, text='Render', command=self.render).pack(side="right", **self.button_defaults)
+        tk.Button(self.RenderRow, text='Preview', command=self.preview).pack(side="right", **self.button_defaults)            
         self.RenderRow.pack(side=tk.TOP, expand="yes", fill="x")
-
-        self.LeftRightFrames.pack(side="top", expand="yes", fill="x")
-        self.LeftFrame.pack(side="left", expand="yes", fill="x")
-        self.RightFrame.pack(side="right")
-
-        self.pack(side=tk.TOP, expand="yes", fill="both")
+        
 
     def askinputfilename(self):
         """Set the input .ASCII file with a native system dialogue"""
@@ -83,7 +122,9 @@ class Application(tk.Frame):
             'start_frame': self.start_frame.get(),
             'end_frame': self.end_frame.get(),
             'n_frames': self.n_frames.get(),
-            'output_file': self.output_file.get()
+            'output_file': self.output_file.get(),
+            'supercell': (self.supercell_X.get(),self.supercell_Y.get(),self.supercell_Z.get()),
+            'bbox_offset': (self.unitcell_X.get(),self.unitcell_Y.get(),self.unitcell_Z.get())
             })
 
     def render(self):
@@ -94,6 +135,16 @@ class Application(tk.Frame):
             ascii_phonons.call_blender(self.input_file, **self.call_blender_args)
             self.message.set('Rendering complete')
 
+    def preview(self):
+        self.update_args()
+        ascii_phonons.call_blender(self.input_file, preview=self.preview_file, **self.call_blender_args)
+
+        # Pack the preview image into the right frame
+        self.preview_pil = ImageTk.Image.open(self.preview_file + '.png')
+        self.preview_tk = ImageTk.PhotoImage(self.preview_pil)
+        self.preview_label.configure(image=self.preview_tk)
+        
+        self.message.set('Preview complete')
 
 if __name__ == "__main__":
     root = tk.Tk()
