@@ -28,9 +28,6 @@ class Application(tk.Frame):
         _, self.preview_file = tempfile.mkstemp(dir=tempfile.gettempdir())
 
         self.call_blender_args = {}
-        self.start_frame = tk.IntVar(value=0)
-        self.end_frame = tk.IntVar(value=29)
-        self.n_frames = tk.IntVar(value=30)
         
         tk.Frame.__init__(self, master)
 
@@ -44,10 +41,11 @@ class Application(tk.Frame):
         self.LeftFrame = tk.Frame(self.LeftRightFrames)
         self.RightFrame = tk.Frame(self.LeftRightFrames)
 
-        tk.Button(self.LeftFrame, text='Open ASCII file',
-                  command=self.askinputfilename).pack(side="top", **self.button_defaults)
+        self.add_fileopen_row()
 
         self.add_cell_row()
+
+        self.add_appearance_row()
 
         self.add_frame_row()
 
@@ -67,6 +65,16 @@ class Application(tk.Frame):
 
         self.pack(side=tk.TOP, expand="yes", fill="both")
 
+    def add_fileopen_row(self):
+        self.mode = tk.IntVar(value=0)
+        FileopenRow = tk.Frame(self.LeftFrame)
+        tk.Button(FileopenRow, text='Open ASCII file',
+                  command=self.askinputfilename).pack(side="left", **self.button_defaults)
+        tk.Entry(FileopenRow, textvariable=self.mode, width=2).pack(side="right")
+        tk.Label(FileopenRow, text='Phonon mode index:').pack(side="right")
+        FileopenRow.pack(side="top")
+        
+
     def add_cell_row(self):
 
         self.supercell_X = tk.IntVar(value=2)
@@ -85,15 +93,42 @@ class Application(tk.Frame):
             tk.Entry(SupercellRow, textvariable=field, width=3).pack(side="left")
             
         SupercellRow.pack(side="top")
+
+    def add_appearance_row(self, padding=20):
+        self.arrows = tk.BooleanVar(value=False)
+        self.arrowsize = tk.DoubleVar(value=10.0)
+        self.atomsize =  tk.DoubleVar(value=1.0)
+        self.vibsize =  tk.DoubleVar(value=10.0)
         
+        Appearance = tk.Frame(self.LeftFrame, borderwidth=3, relief="groove")
+        tk.Label(Appearance, text="Appearance settings").pack(side="top", fill="x")
+       
+        tk.Checkbutton(Appearance, text="Show arrows", variable=self.arrows).pack(side="top")
+
+        AppearanceScales = tk.Frame(Appearance)
+        for label, param in (('Arrow size:', self.arrowsize),
+                                      ('Vib size:', self.vibsize),
+                                      ('Atom scale:', self.atomsize)):
+            tk.Label(AppearanceScales, text=label).pack(side="left")
+            tk.Entry(AppearanceScales, textvariable=param, width=3).pack(side="left")
+        AppearanceScales.pack(side="top")
+
+        Appearance.pack(side="top", padx=padding, pady=padding)
+
 
     def add_frame_row(self):
+        self.start_frame = tk.IntVar(value=0)
+        self.end_frame = tk.IntVar(value=29)
+        self.n_frames = tk.IntVar(value=30)
+        self.gif = tk.BooleanVar(value=True)
+        
         FrameRow = tk.Frame(self.LeftFrame)
         tk.Label(FrameRow, text='Frame range').pack(side="left")
         tk.Entry(FrameRow, textvariable=self.start_frame, width=3).pack(side="left")
         tk.Entry(FrameRow, textvariable=self.end_frame, width=3).pack(side="left")
         tk.Label(FrameRow, text='Frames/cycle').pack(side="left")
         tk.Entry(FrameRow, textvariable=self.n_frames, width=3).pack(side="left")
+        tk.Checkbutton(FrameRow, text="Make .gif", variable=self.gif).pack(side="left")
         FrameRow.pack(side="top")
 
     def add_render_row(self):
@@ -124,8 +159,15 @@ class Application(tk.Frame):
             'n_frames': self.n_frames.get(),
             'output_file': self.output_file.get(),
             'supercell': (self.supercell_X.get(),self.supercell_Y.get(),self.supercell_Z.get()),
-            'bbox_offset': (self.unitcell_X.get(),self.unitcell_Y.get(),self.unitcell_Z.get())
+            'bbox_offset': (self.unitcell_X.get(),self.unitcell_Y.get(),self.unitcell_Z.get()),
+            'vectors': self.arrows.get(),
+            'scale_factor': self.atomsize.get(),
+            'vib_magnitude': self.vibsize.get(),
+            'arrow_magnitude': self.arrowsize.get(),
+            'gif':self.gif.get(),
+            'mode_index':self.mode.get()
             })
+        return self.call_blender_args
 
     def render(self):
         self.update_args()
@@ -136,8 +178,9 @@ class Application(tk.Frame):
             self.message.set('Rendering complete')
 
     def preview(self):
-        self.update_args()
-        ascii_phonons.call_blender(self.input_file, preview=self.preview_file, **self.call_blender_args)
+        kwargs = self.update_args().copy()
+        kwargs.update({'preview':self.preview_file, 'gif':False})
+        ascii_phonons.call_blender(self.input_file,  **kwargs)
 
         # Pack the preview image into the right frame
         self.preview_pil = ImageTk.Image.open(self.preview_file + '.png')
