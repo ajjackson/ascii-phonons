@@ -23,5 +23,4 @@ List of modules
    vsim2blender/arrows
    vsim2blender/ascii_importer
    vsim2blender/plotter
-
-
+   vsim2blender/camera
