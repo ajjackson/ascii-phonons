@@ -94,11 +94,16 @@ class Application(tk.Frame):
         self.arrowsize = tk.DoubleVar(value=10.0)
         self.atomsize =  tk.DoubleVar(value=1.0)
         self.vibsize =  tk.DoubleVar(value=10.0)
+        self.camera_rot = tk.DoubleVar(value=360)
         
         Appearance = tk.Frame(self.LeftFrame, borderwidth=3, relief="groove")
         tk.Label(Appearance, text="Appearance settings").pack(side="top", fill="x")
-       
-        tk.Checkbutton(Appearance, text="Show arrows", variable=self.arrows).pack(side="top")
+
+        AppearanceRow1 = tk.Frame(Appearance)
+        tk.Entry(AppearanceRow1, textvariable=self.camera_rot, width=4).pack(side="right")
+        tk.Label(AppearanceRow1, text="Camera tilt:").pack(side="right")
+        tk.Checkbutton(AppearanceRow1, text="Show arrows", variable=self.arrows).pack(side="left")
+        AppearanceRow1.pack(side="top", fill="x", expand="yes")
 
         AppearanceScales = tk.Frame(Appearance)
         for label, param in (('Arrow size:', self.arrowsize),
@@ -166,6 +171,7 @@ class Application(tk.Frame):
             'bbox_offset': (self.unitcell_X.get(),self.unitcell_Y.get(),self.unitcell_Z.get()),
             'bbox': self.show_box.get(),
             'vectors': self.arrows.get(),
+            'camera_rot': self.camera_rot.get(),
             'scale_factor': self.atomsize.get(),
             'vib_magnitude': self.vibsize.get(),
             'arrow_magnitude': self.arrowsize.get(),
