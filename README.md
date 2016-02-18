@@ -54,6 +54,7 @@ The simplest way to get up and running is
   [Ubuntu repositories are often quite far behind...]
 - [Imagemagick](http://www.imagemagick.org) tools (specifically "convert" and "montage") are used for image conversion and tiling.
   This is available in most package managers and may even be pre-installed with your Unix-like operating system.
+- The GUI uses Tkinter with the python image library. On Linux this is typically packaged as `python-imaging-tk`. Mac OSX and Windows Python distributions tend to include Tkinter, but it may be necessary to also install a PIL implementation such as Pillow.
 
 ## Using the wrapper script
 
