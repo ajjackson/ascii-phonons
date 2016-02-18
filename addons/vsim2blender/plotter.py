@@ -229,7 +229,7 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
               n_frames=30, vectors=False, bbox=True, bbox_offset=(0,0,0),
               scale_factor=1.0, vib_magnitude=10.0, arrow_magnitude=1.0,
               camera_rot=0., config=False, start_frame=None, end_frame=None,
-              preview=False):
+              preview=False, do_mass_weighting=False):
     """
     Open v_sim ascii file in Blender
 
@@ -257,7 +257,10 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
     :type camera_rot: float
     :param config: Settings from configuration files
     :type config: configparser.ConfigParser
-
+    :param preview: Enable preview mode - single frame, smaller render
+    :type preview: boolean
+    :param do_mass_weighting: Weight eigenvectors by mass. This is not usually required.
+    :type do_mass_weighting: boolean
     """
 
     if not config:
@@ -273,7 +276,10 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
     vsim_cell, positions, symbols, vibs = import_vsim(ascii_file)
     lattice_vectors = cell_vsim_to_vectors(vsim_cell)
 
-    masses = [float(config['masses'][symbol]) for symbol in symbols]
+    if do_mass_weighting:
+        masses = [float(config['masses'][symbol]) for symbol in symbols]
+    else:
+        masses = [1 for symbol in symbols]
         
     # Switch to a new empty scene
     bpy.ops.scene.new(type='EMPTY')
