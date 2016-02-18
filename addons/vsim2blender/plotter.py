@@ -12,6 +12,7 @@ import vsim2blender
 # sys.path.insert(0, os.path.abspath(script_directory)+'/..')
 from vsim2blender.ascii_importer import import_vsim, cell_vsim_to_vectors
 from vsim2blender.arrows import add_arrow, vector_to_euler
+import vsim2blender.camera as camera
 
 script_directory = os.path.dirname(__file__)
 
@@ -309,20 +310,8 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
     # Note that cameras as objects and cameras as 'cameras' have different attributes,
     # so need to look up camera in bpy.data.cameras to set field of view.
 
-    field_of_view = 0.5 # Camera field of view in radians
-
-    camera_x = (lattice_vectors[0][0]/2. + lattice_vectors[2][0]/2.) * supercell[0]
-    camera_y = max(((abs(lattice_vectors[0][0]) + abs(lattice_vectors[2][0]) + 2) * supercell[0],
-                    abs(lattice_vectors[2][2]) * supercell[2] + 2)) / (-2. * math.tan(field_of_view/2.))
-    camera_z = lattice_vectors[2][2]/2. * supercell[2]
-    camera_loc=( camera_x,
-                 1.05 * camera_y,
-                camera_z)
-    bpy.ops.object.camera_add(location=camera_loc,
-                              rotation=(math.pi/2,(2*math.pi/360.)*camera_rot,0))
-    camera = bpy.context.object
-    bpy.context.scene.camera = camera
-    bpy.data.cameras[camera.name].angle = field_of_view
+    camera.setup_camera(lattice_vectors, supercell, camera_rot=camera_rot,
+                        field_of_view=0.5, scene=bpy.context.scene)
 
     bpy.context.scene.world = bpy.data.worlds['World']
     bpy.data.worlds['World'].horizon_color = [float(x) for x in 
@@ -342,6 +331,8 @@ def setup_render(start_frame=0, end_frame=None, n_frames=30, preview=False):
     :type preview: str or Boolean False    
 
     """
+    if type(start_frame) != int:
+        start_frame = 0
     if preview:
         end_frame = start_frame
     elif type(end_frame) != int:
