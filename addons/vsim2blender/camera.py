@@ -1,7 +1,6 @@
 import bpy
 import math
 from mathutils import Vector
-from vsim2blender.arrows import vector_to_euler
 
 def setup_camera(lattice_vectors, supercell, camera_rot=0,
                  field_of_view=0.5, scene=bpy.context.scene):
@@ -59,6 +58,10 @@ def setup_camera_miller(lattice_vectors, supercell, camera_rot=0,
     supercell_centre = 0.5 * sum([a,b,c], Vector((0.,0.,0.)))
     vertices = [x for x in [Vector((0,0,0)), a, a+b, b, c, c+a, c+a+b, c+b]]    
 
+    # Create an empty at the centre of the model for the camera to target
+    bpy.ops.object.add(type='EMPTY', location=supercell_centre)
+    empty_center = bpy.context.object
+
     # Use Miller index to create a vector to the camera
     # with arbitrary magnitude. Distances perpendicular to this vector
     # determine required camera distance
@@ -76,13 +79,15 @@ def setup_camera_miller(lattice_vectors, supercell, camera_rot=0,
     camera_direction_vector.length = camera_distance
     camera_position = supercell_centre + camera_direction_vector
 
-    camera_rotation = (Vector((math.pi/2, 0, +math.pi/2)) + 
-        Vector(vector_to_euler(camera_direction_vector)))
-
-    bpy.ops.object.camera_add(location=camera_position,
-                              rotation=camera_rotation)
-
+    bpy.ops.object.camera_add(location=camera_position)
     camera = bpy.context.object
+    
+    # Use tracking to point camera at center of structure
+    bpy.ops.object.constraint_add(type='TRACK_TO')
+    camera.constraints['Track To'].target = empty_center
+    camera.constraints['Track To'].track_axis = 'TRACK_NEGATIVE_Z'
+    camera.constraints['Track To'].up_axis = 'UP_Y'    
+
     bpy.context.scene.camera = camera
     bpy.data.cameras[camera.name].angle = field_of_view
 

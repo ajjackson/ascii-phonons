@@ -319,7 +319,7 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
     # camera.setup_camera(lattice_vectors, supercell, camera_rot=camera_rot,
     #                     field_of_view=0.5, scene=bpy.context.scene)
     camera.setup_camera_miller(lattice_vectors, supercell, camera_rot=camera_rot,
-                        field_of_view=0.2, miller=(0,0,1),  scene=bpy.context.scene)
+                        field_of_view=0.2, miller=(1,0,0),  scene=bpy.context.scene)
 
     bpy.context.scene.world = bpy.data.worlds['World']
     bpy.data.worlds['World'].horizon_color = [float(x) for x in 
