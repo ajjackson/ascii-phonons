@@ -54,15 +54,15 @@ The list of accepted arguments may also be viewed by calling with the "help" arg
 |                                   |file is specified.                        |
 |                                   |                                          |
 +-----------------------------------+------------------------------------------+
-| ``-v``, ``--vectors``             |Show mass-weighted eigenvectors with      |
-|                                   |static arrows.                            |
+| ``-v``, ``--vectors``             | Show eigenvectors with                   |
+|                                   | static arrows.                           |
 +-----------------------------------+------------------------------------------+
 | ``--scale_factor X.Y``            | Floating-point scale factor for atom     |
 |                                   | size. 1.0 = covalent radius              |
 +-----------------------------------+------------------------------------------+
 | ``--vib_magnitude X.Y``           |Floating-point scale factor applied to    |
-|                                   |mass-weighted displacements. The default  |
-|                                   |of 10 was selected for Cu2ZnSnS4; this may|
+|                                   |  displacements. The default value        |
+|                                   |of 3 was selected for Cu2ZnSnS4; this may |
 |                                   |need to be adjusted for different systems.|
 +-----------------------------------+------------------------------------------+
 | ``--arrow-magnitude X.Y``         | Floating-point scale factor applied to   |
@@ -89,4 +89,9 @@ The list of accepted arguments may also be viewed by calling with the "help" arg
 |                                   |                                          |
 |                                   |                                          |
 |                                   |                                          |
++-----------------------------------+------------------------------------------+
+| ``--do_mass_weighting``           | Apply mass weighting to atom movements.  |
+|                                   | This has usually already been done in the|
+|                                   | construction of the .ascii file, and     |
+|                                   | should not be repeated.                  |
 +-----------------------------------+------------------------------------------+

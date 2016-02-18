@@ -91,9 +91,9 @@ class Application(tk.Frame):
 
     def add_appearance_row(self, padding=20):
         self.arrows = tk.BooleanVar(value=False)
-        self.arrowsize = tk.DoubleVar(value=10.0)
-        self.atomsize =  tk.DoubleVar(value=1.0)
-        self.vibsize =  tk.DoubleVar(value=10.0)
+        self.arrowsize = tk.DoubleVar(value=20.0)
+        self.atomsize =  tk.DoubleVar(value=0.6)
+        self.vibsize =  tk.DoubleVar(value=3.0)
         self.camera_rot = tk.DoubleVar(value=360)
         
         Appearance = tk.Frame(self.LeftFrame, borderwidth=3, relief="groove")

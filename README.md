@@ -13,15 +13,17 @@ Please use the [issue tracker](https://github.com/ajjackson/ascii-phonons/issues
 
 ## Features
 
+* There is a GUI and a command-line interface, for easy accessibility and scripting potential.
 * Import atomic positions, unit cell and phonon modes from `.ascii` files
 * Use open-source graphics package Blender to render images; the end-user is not required to interact with the Blender GUI unless they want to
-* Create static or animated images showing the unit cell bounding box, atomic positions and mass-weighted eigenvectors
+* Create static or animated images showing the unit cell bounding box, atomic positions and eigenvectors
 * Use ImageMagick to export .gif files for use in web browser
-* Display arbitrary supercell size defined by three counting numbers. The displayed bounding box may be shifted within this structure.
-* Animated images include mass-weighted movements of atoms, which include the phase shift in different unit cells
-* Arrows indicating mass-weighted eigenvectors do *not* include phase information
-* An attractive "cartoon-like" visual style with flat colours and outlines
+* Arbitrary supercells are defined by three counting numbers. The displayed bounding box may be shifted within this structure.
+* Animated images include movements of atoms with the phase shift in different unit cells for off-Gamma phonons
+* Arrows indicating eigenvectors do *not* include phase information
+* The output has an attractive "cartoon-like" visual style with flat colours and outlines.
 * Atom colours are assigned from a default or user config file. If undefined, a random colour is selected.
+* Mass-weighting may optionally be added if this was not done in the .ascii file construction.
 
 ## Development
 
@@ -35,7 +37,8 @@ hackery to get around this.  Building Blender as a Python library
 would ease development considerably, but appears to be quite difficult
 to do on a Mac.
 
-The target platforms are modern GNU/Linux distributions and Mac OS X. Windows support is seen as faintly desirable, but would impede the initial development process.
+The target platforms are modern GNU/Linux distributions and Mac OS X. 
+Operation under Windows is not actively being tested, but should be possible.
 
 ## Setup
 
