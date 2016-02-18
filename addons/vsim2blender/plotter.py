@@ -310,8 +310,10 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
     # Note that cameras as objects and cameras as 'cameras' have different attributes,
     # so need to look up camera in bpy.data.cameras to set field of view.
 
-    camera.setup_camera(lattice_vectors, supercell, camera_rot=camera_rot,
-                        field_of_view=0.5, scene=bpy.context.scene)
+    # camera.setup_camera(lattice_vectors, supercell, camera_rot=camera_rot,
+    #                     field_of_view=0.5, scene=bpy.context.scene)
+    camera.setup_camera_miller(lattice_vectors, supercell, camera_rot=camera_rot,
+                        field_of_view=0.2, miller=(0,0,1),  scene=bpy.context.scene)
 
     bpy.context.scene.world = bpy.data.worlds['World']
     bpy.data.worlds['World'].horizon_color = [float(x) for x in 
