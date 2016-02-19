@@ -89,8 +89,11 @@ vsim2blender.plotter.render(output_file='{out_file}', preview={preview})
         convert_call_args = ['convert', '-delay', '10'] + tmp_files + ['-loop', '0', gif_name]
         try:
             call(convert_call_args)
-        except:
-            pass
+        except OSError as err:
+            raise Exception("\n\nCould not run Imagemagick convert to create .gif.\n" +
+                            "Error message: {0}\n".format(err) +
+                            "Are you sure you have Imagemagick installed?\n")
+
         for f in tmp_files:
             os.remove(f)
         
