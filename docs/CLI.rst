@@ -80,10 +80,21 @@ The list of accepted arguments may also be viewed by calling with the "help" arg
 |                                   |Y Z of the lattice vectors.               |
 |                                   |                                          |
 +-----------------------------------+------------------------------------------+
+| ``--miller X Y Z``                | Miller indices determining camera        |
+|                                   | direction. Negative and fractional values|
+|                                   | are permitted.                           |
+|                                   |                                          |
++-----------------------------------+------------------------------------------+
 | ``--camera_rot ROT``              | Rotated camera position in degrees.      |
 |                                   |                                          |
 |                                   |                                          |
 |                                   |                                          |
++-----------------------------------+------------------------------------------+
+| ``--zoom X.Y``                    | Floating-point zoom adjustment. A        |
+|                                   | sensible starting point is calculated    |
+|                                   | automatically and corresponds to the     |
+|                                   | value 1.0, but this factor can be        |
+|                                   | used for further adjustment.             |
 +-----------------------------------+------------------------------------------+
 | ``--config PATH/FILE.conf``       | Path to user configuration file.         |
 |                                   |                                          |
