@@ -10,7 +10,7 @@ Parameters are grouped into *sections* with a header in square brackets; the par
 
 ::
 
-   [Header]
+   [header]
    
    Like = this
    Or: this
@@ -23,7 +23,7 @@ Parameters and section headers are *case-sensitive*, and are lower-case except f
 Settings
 --------
 
-**settings.conf** currently hosts one section, ``[General]``, with the following parameters:
+**settings.conf** currently hosts one section, ``[general]``, with the following parameters:
 
 * ``background = R G B`` The background colour is set with three floating point RGB values. These range between 0 and 1.
 

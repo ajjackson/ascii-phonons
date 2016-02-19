@@ -19,7 +19,7 @@ bl_info = {
     "tracker_url": "https://github.com/ajjackson/ascii-phonons/issues"
     }
 
-def read_config(user_config=False):
+def read_config(user_config=''):
     """
     Read configuration files elements.conf, settings.conf and optional user conf
 
@@ -41,7 +41,9 @@ def read_config(user_config=False):
                              'elements.conf'))
     config.read(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              'settings.conf'))
-    if user_config:
-        config.read(os.path.abspath(user_config))
+    if user_config == '':
+        pass
+    else:
+        config.read(user_config)
 
     return config

@@ -3,7 +3,7 @@
 from __future__ import print_function
 import argparse
 import ascii_phonons
-
+import os
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -43,18 +43,21 @@ if __name__ == "__main__":
                         help="View rotation in degrees")
     parser.add_argument("--zoom", type=float, default=1.,
                         help="Camera zoom adjustment")
-    parser.add_argument("--config", type=str, default='None',
+    parser.add_argument("--config", type=str, default='',
                         help="User configuration file")
     parser.add_argument("--do_mass_weighting", action="store_true",
                         help="Apply mass weighting to atom movements. This has usually already been done in the construction of the .ascii file, and should not be repeated.")
 
     args = parser.parse_args()
 
-    # Quote config file name
-    if args.config == 'None':
-        user_config = 'False'
+
+    user_config = args.config    
+    if user_config == '':
+        pass
     else:
-        user_config = '\'' + args.config + '\''
+        user_config == os.path.abspath(user_config)
+        
+    print(user_config)
 
     ascii_phonons.call_blender(args.input_file,
          blender_bin=args.blender_bin, mode_index=args.mode_index,
@@ -64,6 +67,7 @@ if __name__ == "__main__":
          end_frame=args.end_frame,
          scale_factor=args.scale_factor,
          vib_magnitude=args.vib_magnitude,
+         user_config=user_config,
          arrow_magnitude=args.arrow_magnitude, vectors=args.vectors,
          output_file=args.output_file, gif=args.gif, bbox=(not args.no_box),
          bbox_offset=args.box_position, miller=args.miller, zoom=args.zoom,

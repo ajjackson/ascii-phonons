@@ -54,7 +54,7 @@ import bpy
 import vsim2blender
 import vsim2blender.plotter
 
-config = vsim2blender.read_config(user_config={config})
+config = vsim2blender.read_config(user_config='{config}')
 
 vsim2blender.plotter.open_mode('{0}', {1}, animate={2}, n_frames={3},
                                 vectors={4}, scale_factor={5}, vib_magnitude={6},

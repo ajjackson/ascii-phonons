@@ -70,7 +70,6 @@ def setup_camera(lattice_vectors, supercell, camera_rot=0,
                              axis = camera_direction_vector)
 
     # Tweak zoom level
-    print(zoom)
     bpy.data.cameras[camera.name].lens = (zoom * 1.5) * camera_distance
     
 def dist_to_view_point(point, camera_direction_vector, field_of_view):

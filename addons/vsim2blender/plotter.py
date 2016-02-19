@@ -266,7 +266,7 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, camera_ro
     :param do_mass_weighting: Weight eigenvectors by mass. This is not usually required.
     :type do_mass_weighting: boolean
     """
-
+    
     if not config:
         config = vsim2blender.read_config()
 
