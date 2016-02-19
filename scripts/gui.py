@@ -43,7 +43,7 @@ class Application(tk.Frame):
 
         self.add_fileopen_row()
 
-        self.add_cell_row()
+        self.add_cell_settings()
 
         self.add_appearance_row()
 
@@ -68,40 +68,54 @@ class Application(tk.Frame):
         tk.Label(FileopenRow, text='Phonon mode index:').pack(side="right")
         FileopenRow.pack(side="top")        
 
-    def add_cell_row(self):
+    def add_cell_settings(self):
 
         self.supercell_X = tk.IntVar(value=2)
         self.supercell_Y = tk.IntVar(value=2)
         self.supercell_Z = tk.IntVar(value=2)
+        self.miller_a = tk.DoubleVar(value=0)
+        self.miller_b = tk.DoubleVar(value=1)        
+        self.miller_c = tk.DoubleVar(value=0)
+        
         self.unitcell_X = tk.DoubleVar(value=0.0)
         self.unitcell_Y = tk.DoubleVar(value=0.0)
         self.unitcell_Z = tk.DoubleVar(value=0.0)
         self.show_box = tk.BooleanVar(value=True)
 
         SupercellRow = tk.Frame(self.LeftFrame)
-        tk.Label(SupercellRow, text='Supercell').pack(side="left")
+        tk.Label(SupercellRow, text='Supercell', width=24, justify="right").pack(side="left")
         for field in self.supercell_X, self.supercell_Y, self.supercell_Z:
-            tk.Entry(SupercellRow, textvariable=field, width=2).pack(side="left")
-        tk.Label(SupercellRow, text='Bounding box location').pack(side="left")
-        for field in self.unitcell_X, self.unitcell_Y, self.unitcell_Z:
             tk.Entry(SupercellRow, textvariable=field, width=3).pack(side="left")
-        tk.Checkbutton(SupercellRow, text="Show box", variable=self.show_box).pack(side="right")
-            
+
+        for field in self.miller_c, self.miller_b, self.miller_a:
+            tk.Entry(SupercellRow, textvariable=field, width=3).pack(side="right")
+        tk.Label(SupercellRow, text="Miller indices:").pack(side="right")
         SupercellRow.pack(side="top", expand="yes", fill="x")
+        
+        UnitcellRow = tk.Frame(self.LeftFrame)
+        tk.Label(UnitcellRow, text='Bounding box location', width=24, justify="right").pack(side="left")        
+        for field in self.unitcell_X, self.unitcell_Y, self.unitcell_Z:
+            tk.Entry(UnitcellRow, textvariable=field, width=3).pack(side="left")
+        tk.Checkbutton(UnitcellRow, text="Show box", variable=self.show_box).pack(side="right")
+        UnitcellRow.pack(side="top", expand="yes", fill="x")            
+
 
     def add_appearance_row(self, padding=20):
         self.arrows = tk.BooleanVar(value=False)
         self.arrowsize = tk.DoubleVar(value=20.0)
         self.atomsize =  tk.DoubleVar(value=0.6)
-        self.vibsize =  tk.DoubleVar(value=3.0)
+        self.vibsize =  tk.DoubleVar(value=1.0)
         self.camera_rot = tk.DoubleVar(value=360)
+        self.zoom = tk.DoubleVar(value=1.)
         
         Appearance = tk.Frame(self.LeftFrame, borderwidth=3, relief="groove")
         tk.Label(Appearance, text="Appearance settings").pack(side="top", fill="x")
 
         AppearanceRow1 = tk.Frame(Appearance)
-        tk.Entry(AppearanceRow1, textvariable=self.camera_rot, width=4).pack(side="right")
-        tk.Label(AppearanceRow1, text="Camera tilt:").pack(side="right")
+        tk.Entry(AppearanceRow1, textvariable=self.camera_rot, width=4).pack(side="right")        
+        tk.Label(AppearanceRow1, text="Rotate:").pack(side="right")
+        tk.Entry(AppearanceRow1, textvariable=self.zoom, width=3).pack(side="right")        
+        tk.Label(AppearanceRow1, text="Zoom:").pack(side="right")                
         tk.Checkbutton(AppearanceRow1, text="Show arrows", variable=self.arrows).pack(side="left")
         AppearanceRow1.pack(side="top", fill="x", expand="yes")
 
@@ -171,12 +185,14 @@ class Application(tk.Frame):
             'bbox_offset': (self.unitcell_X.get(),self.unitcell_Y.get(),self.unitcell_Z.get()),
             'bbox': self.show_box.get(),
             'vectors': self.arrows.get(),
-            'camera_rot': self.camera_rot.get(),
             'scale_factor': self.atomsize.get(),
             'vib_magnitude': self.vibsize.get(),
             'arrow_magnitude': self.arrowsize.get(),
-            'gif':self.gif.get(),
-            'mode_index':self.mode.get()
+            'gif': self.gif.get(),
+            'mode_index': self.mode.get(),
+            'miller': (self.miller_a.get(), self.miller_b.get(), self.miller_c.get()),
+            'camera_rot': self.camera_rot.get(),
+            'zoom': self.zoom.get()
             }) 
         return self.call_blender_args
 

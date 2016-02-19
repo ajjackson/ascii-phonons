@@ -225,10 +225,10 @@ def vector_with_phase(atom, qpt, displacement_vector):
     return arrow_end - r
 
 
-def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
+def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, camera_rot=0,
               n_frames=30, vectors=False, bbox=True, bbox_offset=(0,0,0),
               scale_factor=1.0, vib_magnitude=10.0, arrow_magnitude=1.0,
-              camera_rot=0., config=False, start_frame=None, end_frame=None,
+              miller=(0,1,0), zoom=1., config=False, start_frame=None, end_frame=None,
               preview=False, do_mass_weighting=False):
     """
     Open v_sim ascii file in Blender
@@ -253,8 +253,12 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
     :type bbox: Boolean
     :param bbox_loc: Position of bbox in lattice vector coordinates. Default (0,0,0) (Left front bottom)
     :type bbox_loc: Vector or 3-tuple
-    :param camera_rot: Camera rotation in degrees
+    :param miller: Miller indices of view
+    :type miller: 3-tuple of floats
+    :param camera_rot: Camera tilt adjustment in degrees
     :type camera_rot: float
+    :param zoom: Camera zoom adjustment
+    :type zoom: float    
     :param config: Settings from configuration files
     :type config: configparser.ConfigParser
     :param preview: Enable preview mode - single frame, smaller render
@@ -316,10 +320,8 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True,
     # Note that cameras as objects and cameras as 'cameras' have different attributes,
     # so need to look up camera in bpy.data.cameras to set field of view.
 
-    # camera.setup_camera(lattice_vectors, supercell, camera_rot=camera_rot,
-    #                     field_of_view=0.5, scene=bpy.context.scene)
-    camera.setup_camera_miller(lattice_vectors, supercell, camera_rot=camera_rot,
-                        field_of_view=0.2, miller=(1,0,0),  scene=bpy.context.scene)
+    camera.setup_camera(lattice_vectors, supercell, camera_rot=camera_rot, zoom=zoom,
+                        field_of_view=0.2, miller=miller,  scene=bpy.context.scene)
 
     bpy.context.scene.world = bpy.data.worlds['World']
     bpy.data.worlds['World'].horizon_color = [float(x) for x in 

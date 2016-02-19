@@ -3,37 +3,7 @@ import math
 from mathutils import Vector
 
 def setup_camera(lattice_vectors, supercell, camera_rot=0,
-                 field_of_view=0.5, scene=bpy.context.scene):
-    """
-    Set up a camera looking along the y axis
-
-    :param lattice_vectors: Lattice vectors of unit cell
-    :type lattice_vectors: 3-tuple of 3-Vectors
-    :param supercell: Supercell dimensions
-    :type supercell: 3-tuple of ints
-    :param camera_rot: Rotation of camera about y axis (i.e. tilt) in degrees
-    :type camera_rot: Float
-    :param field_of_view: Camera field of view in radians
-    :type field_of_view: float
-    :param scene: Scene in which to insert camera object
-    :type scene: bpy Scene
-    """
-
-    camera_x = (lattice_vectors[0][0]/2. + lattice_vectors[2][0]/2.) * supercell[0]
-    camera_y = max(((abs(lattice_vectors[0][0]) + abs(lattice_vectors[2][0]) + 2) * supercell[0],
-                    abs(lattice_vectors[2][2]) * supercell[2] + 2)) / (-2. * math.tan(field_of_view/2.))
-    camera_z = lattice_vectors[2][2]/2. * supercell[2]
-    camera_loc=( camera_x,
-                 1.05 * camera_y,
-                camera_z)
-    bpy.ops.object.camera_add(location=camera_loc,
-                              rotation=(math.pi/2,(2*math.pi/360.)*camera_rot,0))
-    camera = bpy.context.object
-    bpy.context.scene.camera = camera
-    bpy.data.cameras[camera.name].angle = field_of_view
-
-def setup_camera_miller(lattice_vectors, supercell, camera_rot=0,
-                        miller=(1,1,0), field_of_view=0.5,
+                        zoom=1., miller=(0,1,0), field_of_view=0.5,
                         scene=bpy.context.scene):
     """
     Set up a camera looking along the y axis
@@ -42,12 +12,13 @@ def setup_camera_miller(lattice_vectors, supercell, camera_rot=0,
     :type lattice_vectors: 3-tuple of 3-Vectors
     :param supercell: Supercell dimensions
     :type supercell: 3-tuple of ints
-    :param camera_rot: Rotation of camera about viewing axis
-                       (i.e. tilt) in degrees
-    :type camera_rot: Float
     :param miller: Miller indices of target view. Floating-point values may be
                    used for fine adjustments if desired.
     :type miller: 3-tuple
+    :param camera_rot: Camera tilt adjustment in degrees
+    :type camera_rot: float
+    :param zoom: Camera zoom adjustment
+    :type zoom: float
     :param field_of_view: Camera field of view in radians
     :type field_of_view: float
     :param scene: Scene in which to insert camera object
@@ -81,18 +52,26 @@ def setup_camera_miller(lattice_vectors, supercell, camera_rot=0,
 
     bpy.ops.object.camera_add(location=camera_position)
     camera = bpy.context.object
+    bpy.context.scene.camera = camera
+    bpy.data.cameras[camera.name].angle = field_of_view
+    bpy.data.cameras[camera.name].clip_end = 1e8
+    
     
     # Use tracking to point camera at center of structure
     bpy.ops.object.constraint_add(type='TRACK_TO')
     camera.constraints['Track To'].target = empty_center
     camera.constraints['Track To'].track_axis = 'TRACK_NEGATIVE_Z'
-    camera.constraints['Track To'].up_axis = 'UP_Y'    
+    camera.constraints['Track To'].up_axis = 'UP_Y'
 
-    bpy.context.scene.camera = camera
-    bpy.data.cameras[camera.name].angle = field_of_view
+    # Rotate camera by mapping to empty and rotating empty
+    camera.constraints['Track To'].use_target_z = True
+    empty_center.select = True
+    bpy.ops.transform.rotate(value=(camera_rot * 2 * math.pi/360),
+                             axis = camera_direction_vector)
 
-    # Not entirely sure why this works but it does
-    bpy.data.cameras[camera.name].lens = 1.5 * camera_distance
+    # Tweak zoom level
+    print(zoom)
+    bpy.data.cameras[camera.name].lens = (zoom * 1.5) * camera_distance
     
 def dist_to_view_point(point, camera_direction_vector, field_of_view):
     """

@@ -9,8 +9,8 @@ addons_path = os.path.join(ascii_phonons_path, 'addons')
 def call_blender(input_file, blender_bin=False, mode_index=0, supercell=(2,2,2),
          animate=True, n_frames=30, start_frame=None, end_frame=None, bbox=True, bbox_offset=(0,0,0),
          vectors=False, output_file=False, vib_magnitude=1.0, arrow_magnitude=1.0,
-         gui=False, gif=False, scale_factor=1.0, camera_rot=0., user_config=False, preview=False,
-         do_mass_weighting=False):
+         gui=False, gif=False, scale_factor=1.0, user_config=False, preview=False,
+         do_mass_weighting=False, miller=(0,1,0), camera_rot=0, zoom=1.):
     input_file = os.path.abspath(input_file)
     if output_file:
         output_file = os.path.abspath(output_file)
@@ -59,15 +59,16 @@ config = vsim2blender.read_config(user_config={config})
 vsim2blender.plotter.open_mode('{0}', {1}, animate={2}, n_frames={3},
                                 vectors={4}, scale_factor={5}, vib_magnitude={6},
                                 arrow_magnitude={7}, supercell=({8},{9},{10}),
-                                bbox={11}, bbox_offset={12}, camera_rot={13},
-                                config=config, start_frame={start_frame}, end_frame={end_frame},
-                                preview={preview}, do_mass_weighting={do_mass_weighting})
+                                bbox={11}, bbox_offset={12}, config=config,
+                                start_frame={start_frame}, end_frame={end_frame},
+                                preview={preview}, do_mass_weighting={do_mass_weighting},
+                                camera_rot={camera_rot}, miller={miller}, zoom={zoom})
 vsim2blender.plotter.setup_render(n_frames={3}, start_frame={start_frame}, end_frame={end_frame}, preview={preview})
 vsim2blender.plotter.render(output_file='{out_file}', preview={preview})
 """.format(input_file, mode_index, animate, n_frames, vectors,
            scale_factor, vib_magnitude, arrow_magnitude,
-           supercell[0], supercell[1], supercell[2], bbox, bbox_offset, camera_rot,
-           out_file=output_file, add_path=addons_path,
+           supercell[0], supercell[1], supercell[2], bbox, bbox_offset,
+           out_file=output_file, add_path=addons_path, miller=miller, camera_rot=camera_rot, zoom=zoom,
            config=user_config, start_frame=start_frame, end_frame=end_frame,
            preview=preview, do_mass_weighting=do_mass_weighting)
 

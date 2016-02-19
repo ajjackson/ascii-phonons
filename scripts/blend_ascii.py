@@ -29,7 +29,7 @@ if __name__ == "__main__":
     parser.add_argument("-v","--vectors", action="store_true", help="Indicate eigenvectors with static arrows.")
     parser.add_argument("--scale_factor", type=float, default=1.0,
                         help="Size of atoms, relative to covalent radius")
-    parser.add_argument("--vib_magnitude", type=float, default=3.0,
+    parser.add_argument("--vib_magnitude", type=float, default=1.0,
                         help="Normalised magnitude of animated phonons")
     parser.add_argument("--arrow_magnitude", type=float, default=20.0,
                         help="Normalised magnitude of static arrows")
@@ -37,8 +37,12 @@ if __name__ == "__main__":
                         help="Hide bounding box")
     parser.add_argument("--box_position", nargs=3, type=float, default=(0,0,0),
                         help="Bounding box position (lattice coordinates)")
+    parser.add_argument("--miller", nargs=3, type=float, default=(0,1,0),
+                        help="Miller indices for view")
     parser.add_argument("--camera_rot", type=float, default=0,
-                        help="Camera rotation in degrees")
+                        help="View rotation in degrees")
+    parser.add_argument("--zoom", type=float, default=1.,
+                        help="Camera zoom adjustment")
     parser.add_argument("--config", type=str, default='None',
                         help="User configuration file")
     parser.add_argument("--do_mass_weighting", action="store_true",
@@ -61,7 +65,7 @@ if __name__ == "__main__":
          scale_factor=args.scale_factor,
          vib_magnitude=args.vib_magnitude,
          arrow_magnitude=args.arrow_magnitude, vectors=args.vectors,
-         output_file=args.output_file, gif=args.gif, bbox=(not
-         args.no_box), bbox_offset=args.box_position,
+         output_file=args.output_file, gif=args.gif, bbox=(not args.no_box),
+         bbox_offset=args.box_position, miller=args.miller, zoom=args.zoom,
          camera_rot=args.camera_rot, do_mass_weighting=args.do_mass_weighting)
 
