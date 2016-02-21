@@ -11,6 +11,8 @@ Please use the [issue tracker](https://github.com/ajjackson/ascii-phonons/issues
 
 ![](images/comof_phonon.gif)
 
+A presentation outlining some features and implementation details is [available online](http://ajjackson.github.io/ascii-phonons-slides).
+
 ## Features
 
 * There is a GUI and a command-line interface, for easy accessibility and scripting potential.
