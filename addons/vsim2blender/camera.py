@@ -37,7 +37,7 @@ def setup_camera(lattice_vectors, supercell, camera_rot=0,
     # with arbitrary magnitude. Distances perpendicular to this vector
     # determine required camera distance
     
-    camera_direction_vector = sum([i * x for i, x in zip(miller, lattice_vectors)],
+    camera_direction_vector = sum([i * x for i, x in zip(miller, reciprocal(lattice_vectors))],
                                   Vector((0,0,0)))
 
     vertices_from_center = [v - supercell_centre for v in vertices]
@@ -92,3 +92,25 @@ def dist_to_view_point(point, camera_direction_vector, field_of_view):
     distance = cone_width / math.sin(field_of_view)
     return distance
 
+def reciprocal(lattice_vectors):
+    """
+    Get reciprocal lattice vectors
+
+    Follows the equations outlined by Ashcroft & Mermin (Solid State Physics Ch 5, 1976)
+    b1 = 2 pi (a2 x a3)/(a1 . (a2 x a3))
+    b2 = 2 pi (a3 x a1)/(a1 . (a2 x a3))
+    b3 = 2 pi (a1 x a2)/(a1 . (a2 x a3))
+
+    :param lattice_vectors: Real-space lattice vectors
+    :type lattice_vectors: 3-tuple of 3-Vectors
+    :returns: Reciprocal lattice vectors
+    :rtype: 3-tuple of 3-vectors
+
+    """
+    a1, a2, a3 = lattice_vectors
+
+    denominator = a1.dot(a2.cross(a3)) / (2. * math.pi)
+    b1, b2, b3 = [x1.cross(x2)/denominator for x1, x2 in ((a2,a3),
+                                                          (a3,a1),
+                                                          (a1,a2))]
+    return (b1, b2, b3)
