@@ -139,14 +139,15 @@ def add_atom(position,lattice_vectors,symbol,cell_id=(0,0,0), scale_factor=1.0, 
     else:
         radius = 1.0
 
-    bpy.ops.mesh.primitive_uv_sphere_add(location=cartesian_position, size=radius * scale_factor)
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3, location=cartesian_position, size=radius * scale_factor)
     atom = bpy.context.object
     if name:
         atom.name = name
 
     material = init_material(symbol, col=col)
     atom.data.materials.append(material)
-    bpy.ops.object.shade_smooth()
+    # Smooth shader goes here; does nothing for flat colours however
+    # bpy.ops.object.shade_smooth()
     
     return atom
 
