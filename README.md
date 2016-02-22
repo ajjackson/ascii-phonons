@@ -54,9 +54,7 @@ The simplest way to get up and running is
 ## Requirements
 
 - Some means of generating .ascii files. We like [Phonopy](http://phonopy.sourceforge.net).
-- A recent version of Blender; development is currently with
-  Blender 2.73 and later, although some effort exists to preserve compatibility with earlier versions.
-  [Ubuntu repositories are often quite far behind...]
+- A recent version of Blender; development is currently with Blender 2.76 and later.
 - [Imagemagick](http://www.imagemagick.org) tools (specifically "convert" and "montage") are used for image conversion and tiling.
   This is available in most package managers and may even be pre-installed with your Unix-like operating system.
 - The GUI uses Tkinter with the python image library. On Linux this is typically packaged as `python-imaging-tk`. Mac OSX and Windows Python distributions tend to include Tkinter, but it may be necessary to also install a PIL implementation such as Pillow.

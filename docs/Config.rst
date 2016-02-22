@@ -23,10 +23,19 @@ Parameters and section headers are *case-sensitive*, and are lower-case except f
 Settings
 --------
 
-**settings.conf** currently hosts one section, ``[general]``, with the following parameters:
+**settings.conf**, which lies inside the **vsim2blender** package, contains default settings that are not related to specific elements. 
 
-* ``background = R G B`` The background colour is set with three floating point RGB values. These range between 0 and 1.
+::
 
+   [general]
+   box_thickness = 5
+   outline_thickness = 3
+
+   [colours]
+   background = 0.5 0.5 0.5
+   box = 1. 1. 1.
+   outline = 0. 0. 0.
+  
 Elements
 --------
 
@@ -56,6 +65,11 @@ welcome for a more mainstream pallette. The values are RGB tuples, with values r
     [colours]
     Cu = 0.8 0.3 0.1
 
+User configuration
+------------------
+An example user configuration file, with an alternative colour scheme, is included in the main project directory as **example.conf**. Note that the colour information for elements and for other parts of the image may be mixed freely.
+
+    
 .. [1] www.nist.gov/pml/data/comp  J. S. Coursey, D. J. Schwab, J. J. Tsai, and R. A. Dragoset, NIST Physical Measurement Laboratory
 .. [2] http://dx.doi.org/10.1039/B801115J B. Cordero *et al.* (2008) *Dalton Trans.* **2008** (21) 2832-2838
 

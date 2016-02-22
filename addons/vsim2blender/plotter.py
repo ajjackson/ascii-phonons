@@ -315,6 +315,7 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, camera_ro
                           mass=mass,
                           rot_euler=vector_to_euler(arrow_vector),
                           scale=arrow_vector.length*arrow_magnitude)
+                bpy.data.materials['Arrow'].diffuse_color = string_to_list(config.get('colours','arrow',fallback='0. 0. 0.'))
             
     # Position camera and colour world
     # Note that cameras as objects and cameras as 'cameras' have different attributes,
@@ -324,12 +325,12 @@ def open_mode(ascii_file, mode_index, supercell=[2,2,2], animate=True, camera_ro
                         field_of_view=0.2, miller=miller,  scene=bpy.context.scene)
 
     bpy.context.scene.world = bpy.data.worlds['World']
-    bpy.data.worlds['World'].horizon_color = [float(x) for x in 
-                                              config['general']['background'].split()]
+    bpy.data.worlds['World'].horizon_color = string_to_list(config.get(
+        'colours','background', fallback='0.5 0.5 0.5'))
 
 def setup_render(start_frame=0, end_frame=None, n_frames=30, preview=False):
     """
-    Setup the render setting
+    Setup the render (old style)
     
     :param n_frames: Animation length of a single oscillation cycle in frames
     :type n_frames: Positive int
@@ -356,6 +357,115 @@ def setup_render(start_frame=0, end_frame=None, n_frames=30, preview=False):
     bpy.context.scene.render.use_edge_enhance = True
     bpy.context.scene.frame_start = start_frame
     bpy.context.scene.frame_end = end_frame
+
+def setup_render_freestyle(start_frame=0, end_frame=None, n_frames=30,
+                           preview=False, config=False):
+    """
+    Setup the render setting
+    
+    :param n_frames: Animation length of a single oscillation cycle in frames
+    :type n_frames: Positive int
+    :param start_frame: The starting frame number of the rendered animation (default=0)
+    :type start_frame: int or None
+    :param end_frame: The ending frame number of the rendered animation (default=start_frame+n_frames-1)
+    :type end_frame: int or None
+    :param preview: Write to a temporary preview file at low resolution instead of the output. Use first frame only.
+    :type preview: str or Boolean False
+    :param config: Configuration settings -- this function makes use of
+                   'box_thickness' and 'outline_thickness' keys in [general] section
+                   and 'outline' and 'box' keys in [colours] section
+    :type config: configparser.ConfigParser
+
+    """
+    if type(start_frame) != int:
+        start_frame = 0
+    if preview:
+        end_frame = start_frame
+    elif type(end_frame) != int:
+        end_frame = start_frame + n_frames - 1
+
+    if not config:
+        config = vsim2blender.read_config()
+        
+    bpy.context.scene.render.resolution_x = 1080
+    bpy.context.scene.render.resolution_y = 1080
+    if preview:
+        bpy.context.scene.render.resolution_percentage = 20
+    else:
+        bpy.context.scene.render.resolution_percentage = 50        
+
+    bpy.context.scene.frame_start = start_frame
+    bpy.context.scene.frame_end = end_frame
+
+    bpy.context.scene.render.use_freestyle=True
+
+    # Wireframe box and add to "Group" for exclusion from outlining
+    # Freestyle doesn't work with wireframes
+    bpy.data.materials['Bounding Box'].type = 'SURFACE'
+    bpy.data.objects['Bounding Box'].select = True
+
+    bpy.ops.object.modifier_add(type='SUBSURF')
+    mesh_to_wireframe(bpy.data.objects['Bounding Box'])
+    mark_edges(bpy.data.objects['Bounding Box'])
+    # bpy.ops.object.group_add()
+
+    # Bounding box line settings
+    bpy.ops.scene.freestyle_lineset_add()
+    boxlines = bpy.context.scene.render.layers['RenderLayer'].freestyle_settings.linesets.active
+    boxlines.linestyle.thickness = float(config.get('general','box_thickness', fallback=5))
+    boxlines.linestyle.color = string_to_list(config.get('colours', 'box', fallback='1. 1. 1.'))
+    # Bounding box tracer ignores everything but Freestyle marked edges
+    boxlines.select_silhouette = False
+    boxlines.select_border = False
+    boxlines.select_crease = False
+    boxlines.select_edge_mark = True
+
+    # Outline settings
+    bpy.ops.scene.freestyle_lineset_add()
+    atomlines = bpy.context.scene.render.layers['RenderLayer'].freestyle_settings.linesets.active
+    atomlines.linestyle.thickness = float(config.get('general','outline_thickness', fallback=3))
+    atomlines.linestyle.color = string_to_list(config.get('colours', 'outline', fallback='0. 0. 0.'))
+    # # Ignore members of 'Group' (i.e. the bounding box) when tracing thin black lines
+    # atomlines.group_negation = 'EXCLUSIVE'
+    # atomlines.group = bpy.data.groups['Group']
+    
+def string_to_list(string):
+    return [float(x) for x in string.split()]
+
+def mesh_to_wireframe(bpy_object):
+    """
+    Create and apply a wireframe modifier to a mesh object
+
+    :param bpy_object: Simple mesh object to convert to a wireframe
+    :type bpy_object: Blender object
+    
+    :returns wire_object: Original object with applied wireframe
+    :rtype wire_object: Blender object
+    """
+    bpy.context.scene.objects.active = bpy_object
+    bpy_object.select = True
+    bpy.ops.object.modifier_add(type='WIREFRAME')
+    bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Wireframe")
+    return bpy_object
+
+def mark_edges(bpy_object):
+    """
+    Mark all the edges of an object's mesh for Freestyle
+
+    :param bpy_object: Object to mark. Must have a mesh.
+    :type bpy_object: Blender object
+
+    :returns marked_object: Original object with Freestyle marks
+    :rtype marked_object: Blender object
+    """
+    bpy.context.scene.objects.active = bpy_object    
+    bpy_object.select = True
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.mesh.mark_freestyle_edge()
+    bpy.ops.object.mode_set(mode='OBJECT')    
+    return bpy_object
+    
 
 def render(scene=False, output_file=False, preview=False):
     """
