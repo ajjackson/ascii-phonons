@@ -70,6 +70,6 @@ User configuration
 An example user configuration file, with an alternative colour scheme, is included in the main project directory as **example.conf**. Note that the colour information for elements and for other parts of the image may be mixed freely.
 
     
-.. [1] www.nist.gov/pml/data/comp  J. S. Coursey, D. J. Schwab, J. J. Tsai, and R. A. Dragoset, NIST Physical Measurement Laboratory
+.. [1] http://www.nist.gov/pml/data/comp  J. S. Coursey, D. J. Schwab, J. J. Tsai, and R. A. Dragoset, NIST Physical Measurement Laboratory
 .. [2] http://dx.doi.org/10.1039/B801115J B. Cordero *et al.* (2008) *Dalton Trans.* **2008** (21) 2832-2838
 
