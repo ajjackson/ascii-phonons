@@ -1,6 +1,8 @@
 import os
 from subprocess import call
 import tempfile
+import re
+import itertools
 
 ascii_phonons_path = os.path.abspath(os.path.join(
      os.path.dirname(os.path.realpath(__file__)), os.path.pardir))
@@ -10,7 +12,7 @@ def call_blender(input_file, blender_bin=False, mode_index=0, supercell=(2,2,2),
          animate=True, n_frames=30, start_frame=None, end_frame=None, bbox=True, bbox_offset=(0,0,0),
          vectors=False, output_file=False, vib_magnitude=1.0, arrow_magnitude=1.0,
          gui=False, gif=False, scale_factor=1.0, user_config=False, preview=False,
-         do_mass_weighting=False, miller=(0,1,0), camera_rot=0, zoom=1.):
+         do_mass_weighting=False, miller=(0,1,0), camera_rot=0, zoom=1., montage=False):
     input_file = os.path.abspath(input_file)
     if output_file:
         output_file = os.path.abspath(output_file)
@@ -97,3 +99,55 @@ vsim2blender.plotter.render(output_file='{out_file}', preview={preview})
         for f in tmp_files:
             os.remove(f)
         
+def montage_static(input_file, **options):
+    mode_data = list(_qpt_freq_iter(input_file))
+    if options['output_file']:
+        output_basename = options['output_file']
+    else:
+        output_basename = 'phonon'
+
+    call_args = ['montage', '-font', 'Helvetica', '-pointsize', '18']
+
+    # Render smaller image
+    options.update({'preview': True})
+
+    for index, (qpt, freq) in enumerate(mode_data):
+        options.update({'output_file': output_basename + str(index)})
+        options.update({'mode_index':index})
+        call_blender(input_file, **options)
+        call_args.extend(['-label', _flabelformat(freq),
+                         options['output_file'] + '.png'])
+    call_args.append(output_basename + '_montage.png')
+
+    call(call_args)
+
+    for index, (qpt, freq) in enumerate(mode_data):
+        os.remove(output_basename + str(index) + '.png')
+
+def _flabelformat(freq):
+    """Formatted frequency labels"""
+    label = '{0:5.2f}'.format(freq)
+    if label in (' 0.00', '-0.00'):
+        return ' '
+    else:
+        return label
+
+def montage_anim(input_file, **options):
+    pass
+
+def _qpt_freq_iter(ascii_file):
+    """Generate tuples of qpt (as list) and frequency"""
+    for txtline in _qpt_string_iter(ascii_file):
+        listline = [float(x) for x in txtline.split(';')]
+        yield(listline[0:3], listline[3])
+
+def _qpt_string_iter(ascii_file):
+    for match in _qpt_regex_iter(ascii_file):
+        if match:
+            yield match.group()
+        
+
+def _qpt_regex_iter(ascii_file):
+    with open(ascii_file, 'r') as f:
+        for line in f:         
+            yield re.search('(?<=#metaData: qpt=\[).*(?= \\\\)', line)

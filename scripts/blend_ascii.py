@@ -7,7 +7,8 @@ import os
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("input_file", help="Path to input file. ASCII formatted for v_sim.")
+    parser.add_argument("input_file",
+                        help="Path to input file. ASCII formatted for v_sim.")
     parser.add_argument("-b", "--blender_bin", help="Path to Blender binary",
                         default=False)
     parser.add_argument("-m","--mode_index", default=0,
@@ -17,16 +18,24 @@ if __name__ == "__main__":
     parser.add_argument("-s","--static", action="store_true",
                         help="Static image (disable animation)")
     parser.add_argument("-f","--n_frames", type=int, default=30,
-                        help="Number of frames in a complete cycle (default number of frames for animation)")
+                        help="Number of frames in a complete cycle "
+                             "(default number of frames for animation)")
     parser.add_argument("--start_frame", type=int, default=None,
                         help="Starting frame number for the animation")
     parser.add_argument("--end_frame", type=int, default=None,
                         help="Ending frame number for the animation")
     parser.add_argument("-o","--output_file", default=False,
-                        help="Render to output. GUI will not open for further editing unless -g (--gui) flag is used")
-    parser.add_argument("-g", "--gui", action="store_true", help="Open full Blender GUI session, even if rendering output")
-    parser.add_argument("--gif", action="store_true", help="Create a .gif file using Imagemagick convert. This flag is ignored if no output file is specified.")
-    parser.add_argument("-v","--vectors", action="store_true", help="Indicate eigenvectors with static arrows.")
+                        help="Render to output. GUI will not open for further "
+                             "editing unless -g (--gui) flag is used")
+    parser.add_argument("-g", "--gui", action="store_true",
+                        help="Open full Blender GUI session, even if "
+                             "rendering output")
+    parser.add_argument("--gif", action="store_true",
+                        help="Create a .gif file using Imagemagick convert. "
+                             "This flag is ignored if no output file is "
+                             "specified.")
+    parser.add_argument("-v","--vectors", action="store_true",
+                        help="Indicate eigenvectors with static arrows.")
     parser.add_argument("--scale_factor", type=float, default=1.0,
                         help="Size of atoms, relative to covalent radius")
     parser.add_argument("--vib_magnitude", type=float, default=1.0,
@@ -46,30 +55,46 @@ if __name__ == "__main__":
     parser.add_argument("--config", type=str, default='',
                         help="User configuration file")
     parser.add_argument("--do_mass_weighting", action="store_true",
-                        help="Apply mass weighting to atom movements. This has usually already been done in the construction of the .ascii file, and should not be repeated.")
+                        help="Apply mass weighting to atom movements. This has"
+                             " usually already been done in the construction "
+                             "of the .ascii file, and should not be repeated.")
+    parser.add_argument("--montage", action="store_true",
+                        help="Create tiled montage with Imagemagick")
 
     args = parser.parse_args()
 
 
-    user_config = args.config    
+    user_config = args.config
     if user_config == '':
         pass
     else:
         user_config == os.path.abspath(user_config)
-        
-    print(user_config)
 
-    ascii_phonons.call_blender(args.input_file,
-         blender_bin=args.blender_bin, mode_index=args.mode_index,
-         supercell=args.supercell_dimensions, animate=(not
-         args.static), n_frames=args.n_frames,
-         start_frame=args.start_frame,
-         end_frame=args.end_frame,
-         scale_factor=args.scale_factor,
-         vib_magnitude=args.vib_magnitude,
-         user_config=user_config,
-         arrow_magnitude=args.arrow_magnitude, vectors=args.vectors,
-         output_file=args.output_file, gif=args.gif, bbox=(not args.no_box),
-         bbox_offset=args.box_position, miller=args.miller, zoom=args.zoom,
-         camera_rot=args.camera_rot, do_mass_weighting=args.do_mass_weighting)
+    options = {'blender_bin': args.blender_bin,
+               'mode_index': args.mode_index,
+               'supercell': args.supercell_dimensions,
+               'animate': (not args.static),
+               'n_frames': args.n_frames,
+               'start_frame': args.start_frame,
+               'end_frame': args.end_frame,
+               'scale_factor': args.scale_factor,
+               'vib_magnitude': args.vib_magnitude,
+               'user_config': user_config,
+               'arrow_magnitude': args.arrow_magnitude,
+               'vectors': args.vectors,
+               'output_file': args.output_file,
+               'gif': args.gif,
+               'bbox': (not args.no_box),
+               'bbox_offset': args.box_position,
+               'miller': args.miller,
+               'zoom': args.zoom,
+               'camera_rot': args.camera_rot,
+               'do_mass_weighting': args.do_mass_weighting,
+               'montage': args.montage}
 
+    if options['montage'] and options['animate']:
+        ascii_phonons.montage_anim(args.input_file, **options)        
+    elif options['montage']:
+        ascii_phonons.montage_static(args.input_file, **options)
+    else:
+        ascii_phonons.call_blender(args.input_file, **options)
