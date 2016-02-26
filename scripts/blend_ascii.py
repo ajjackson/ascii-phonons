@@ -2,8 +2,13 @@
 
 from __future__ import print_function
 import argparse
-import ascii_phonons
 import os
+import sys
+
+pathname = os.path.abspath(sys.argv[0])
+project_root = os.path.dirname(os.path.dirname(pathname))
+sys.path = [project_root] + sys.path
+import ascii_phonons
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
