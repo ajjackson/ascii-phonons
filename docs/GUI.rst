@@ -9,7 +9,7 @@ At this time a useful subset of features is implemented.
 .. figure:: ../images/gui.png
    :align: center
 
-To launch the GUI, which is compatible with Python 3 and Python 2.7, simply run **scripts/gui.py**.
+To launch the GUI, which is compatible with Python 3 and Python 2.7, simply run **scripts/ascii-phonons-gui**.
 
 Dependencies
 ------------

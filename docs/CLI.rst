@@ -3,7 +3,7 @@
 Command-line interface
 ======================
 
-A command-line utility, **blend_ascii.py** is provided in the
+A command-line utility, **ascii-phonons** is provided in the
 *scripts* folder.  This program generates a temporary Python 3 script,
 making use of the :mod:`vsim2blender` module, and calls Blender.  The
 only mandatory argument is a ``.ascii`` file containing the crystal
