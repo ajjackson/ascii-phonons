@@ -61,9 +61,9 @@ The list of accepted arguments may also be viewed by calling with the "help" arg
 |                                   | size. 1.0 = covalent radius              |
 +-----------------------------------+------------------------------------------+
 | ``--vib_magnitude X.Y``           |Floating-point scale factor applied to    |
-|                                   |  displacements. The default value        |
-|                                   |of 3 was selected for Cu2ZnSnS4; this may |
-|                                   |need to be adjusted for different systems.|
+|                                   |displacements. The default value of 3 was |
+|                                   |selected for Cu2ZnSnS4; this may need to  |
+|                                   |be adjusted for different systems.        |
 +-----------------------------------+------------------------------------------+
 | ``--arrow-magnitude X.Y``         | Floating-point scale factor applied to   |
 |                                   | arrows created with the -v flag. If this |
