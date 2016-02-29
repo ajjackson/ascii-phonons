@@ -3,7 +3,7 @@
 Command-line interface
 ======================
 
-A command-line utility, **blend_ascii.py** is provided in the
+A command-line utility, **ascii-phonons** is provided in the
 *scripts* folder.  This program generates a temporary Python 3 script,
 making use of the :mod:`vsim2blender` module, and calls Blender.  The
 only mandatory argument is a ``.ascii`` file containing the crystal
@@ -61,9 +61,9 @@ The list of accepted arguments may also be viewed by calling with the "help" arg
 |                                   | size. 1.0 = covalent radius              |
 +-----------------------------------+------------------------------------------+
 | ``--vib_magnitude X.Y``           |Floating-point scale factor applied to    |
-|                                   |  displacements. The default value        |
-|                                   |of 3 was selected for Cu2ZnSnS4; this may |
-|                                   |need to be adjusted for different systems.|
+|                                   |displacements. The default value of 3 was |
+|                                   |selected for Cu2ZnSnS4; this may need to  |
+|                                   |be adjusted for different systems.        |
 +-----------------------------------+------------------------------------------+
 | ``--arrow-magnitude X.Y``         | Floating-point scale factor applied to   |
 |                                   | arrows created with the -v flag. If this |

@@ -1,12 +1,17 @@
 #! /usr/bin/env python
 
 from __future__ import print_function
-import ascii_phonons
-from os.path import isdir, join
+
+import sys
+from os.path import isdir, join, dirname, abspath
 import tempfile
 
-from sys import version_info
-if version_info.major > 2:
+pathname = abspath(sys.argv[0])
+project_root = dirname(dirname(pathname))
+sys.path = [project_root] + sys.path
+import ascii_phonons
+
+if sys.version_info.major > 2:
     import tkinter as tk
     import tkinter.filedialog as filedialog
 else:

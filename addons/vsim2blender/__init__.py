@@ -13,7 +13,7 @@ bl_info = {
     "description": "Generate phonon mode visualisations from ASCII input files",
     "author": "Adam J. Jackson",
     "version": (0,5,0),
-    "blender": (2, 67, 0),
+    "blender": (2, 70, 0),
     "location": "",
     "category": "Import-Export",
     "tracker_url": "https://github.com/ajjackson/ascii-phonons/issues"

@@ -54,14 +54,16 @@ The simplest way to get up and running is
 ## Requirements
 
 - Some means of generating .ascii files. We like [Phonopy](http://phonopy.sourceforge.net).
-- A recent version of Blender; development is currently with Blender 2.76 and later.
+- A recent version of [Blender](https://www.blender.org/download); development is currently with Blender 2.76 and later. 
+  At least version 2.70 is needed, which provides the wireframe modifier used to draw the bounding box. Note that the versions of Blender available in package managers such as apt-get are often quite dated.
+  Installing the latest version for Linux is easy, however; just download the .tar.gz file, untar it and add the directory to your PATH.
 - [Imagemagick](http://www.imagemagick.org) tools (specifically "convert" and "montage") are used for image conversion and tiling.
   This is available in most package managers and may even be pre-installed with your Unix-like operating system.
 - The GUI uses Tkinter with the python image library. On Linux this is typically packaged as `python-imaging-tk`. Mac OSX and Windows Python distributions tend to include Tkinter, but it may be necessary to also install a PIL implementation such as Pillow.
 
-## Using the wrapper script
+## Using ascii-phonons
 
-At the moment the most sane way to work with this is to use the wrapper **scripts/blend_ascii.py** in a Bash shell. Call the script with
+For those who would prefer to avoid working through the Python API, a command-line wrapper **scripts/ascii-phonons** and a graphical user intergace **scripts/ascii-phonons-gui** are available. Call the script with
 
     python blend_ascii.py -h
 
@@ -72,12 +74,12 @@ However, the script assumes you have Blender installed in a folder called "Blend
 
 A typical call to the wrapper script would be something like:
 
-    python blend_ascii.py /path/to/my/phonons.ascii -m 5 --static --vectors -o pretty
+    ascii-phonons /path/to/my/phonons.ascii -m 5 --static --vectors -o pretty
 
 which should write a static image **pretty.png**, illustrating mode 5 with arrows.
 To generate an animation, try
 
-    python blend_ascii.py /path/to/my/phonons.ascii -m 1 --gif -o pretty
+    ascii-phonons /path/to/my/phonons.ascii -m 1 --gif -o pretty
 
 which will use Imagemagick to generate **pretty.gif**.
 

@@ -2,7 +2,7 @@ Camera
 ======
 
 Camera placement is an interesting problem.  The current method
-:function:`vsim2blender.camera.setup_camera` looks along the y axis
+:func:`vsim2blender.camera.setup_camera` looks along the y axis
 and estimates a sensible distance based on the lattice parameters, but
 is occasionally thrown off.
 
@@ -11,5 +11,3 @@ specified by giving the Miller indices of a plane to view.
 
 .. automodule:: vsim2blender.camera
    :members:                
-
-
