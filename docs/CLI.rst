@@ -85,6 +85,11 @@ The list of accepted arguments may also be viewed by calling with the "help" arg
 |                                   | are permitted.                           |
 |                                   |                                          |
 +-----------------------------------+------------------------------------------+
+| ``--montage``                     |Use Imagemagick to create a tiled array   |
+|                                   |output of all modes. The `-m` flag is     |
+|                                   |ignored. An animated .gif will be output  |
+|                                   |unless ``--static`` is specified.         |
++-----------------------------------+------------------------------------------+
 | ``--camera_rot ROT``              | Rotated camera position in degrees.      |
 |                                   |                                          |
 |                                   |                                          |

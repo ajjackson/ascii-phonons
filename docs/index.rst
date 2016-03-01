@@ -18,7 +18,8 @@ Contents:
    Installation
    CLI
    GUI
-   bpy
+   Python
+   Bpy
    Config
    Development
    License

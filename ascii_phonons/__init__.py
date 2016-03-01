@@ -13,6 +13,14 @@ def call_blender(input_file, blender_bin=False, mode_index=0, supercell=(2,2,2),
          vectors=False, output_file=False, vib_magnitude=1.0, arrow_magnitude=1.0,
          gui=False, gif=False, scale_factor=1.0, user_config=False, preview=False,
          do_mass_weighting=False, miller=(0,1,0), camera_rot=0, zoom=1., montage=False):
+    """Generate a temporary script file and call Blender
+
+    Typically Blender is called in batch mode to render one or a series
+    of .png image files.
+
+    :param input_file: Path to .ascii file specifying crystal structure and vibrational modes
+    :type input_file: str
+    """
     input_file = os.path.abspath(input_file)
     if output_file:
         output_file = os.path.abspath(output_file)
