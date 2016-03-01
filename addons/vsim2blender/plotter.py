@@ -393,7 +393,12 @@ def setup_render_freestyle(start_frame=0, end_frame=None, n_frames=30,
     if preview:
         bpy.context.scene.render.resolution_percentage = 20
     else:
-        bpy.context.scene.render.resolution_percentage = 50        
+        bpy.context.scene.render.resolution_percentage = 50
+
+    # These flat renders don't use much memory, so render a single big tiles for high speed
+    bpy.context.scene.render.tile_x = 1028
+    bpy.context.scene.render.tile_y = 1028
+
 
     bpy.context.scene.frame_start = start_frame
     bpy.context.scene.frame_end = end_frame

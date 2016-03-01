@@ -54,6 +54,8 @@ class Application(tk.Frame):
 
         self.add_frame_row()
 
+        self.add_montage_row()
+
         self.add_render_row()
         
         self.add_preview_panel()
@@ -134,6 +136,10 @@ class Application(tk.Frame):
 
         Appearance.pack(side="top", padx=padding, pady=padding)
 
+    def add_montage_row(self):
+        self.montage = tk.BooleanVar(value=False)
+        tk.Checkbutton(self.LeftFrame, text="Show all modes as montage",
+                           variable=self.montage).pack(side="top", fill="x")
 
     def add_frame_row(self):
         self.start_frame = tk.IntVar(value=0)
@@ -195,6 +201,7 @@ class Application(tk.Frame):
             'arrow_magnitude': self.arrowsize.get(),
             'gif': self.gif.get(),
             'mode_index': self.mode.get(),
+            'montage': self.montage.get(),
             'miller': (self.miller_a.get(), self.miller_b.get(), self.miller_c.get()),
             'camera_rot': self.camera_rot.get(),
             'zoom': self.zoom.get()
@@ -206,7 +213,13 @@ class Application(tk.Frame):
         if self.input_file == '' or isdir(self.input_file):
             self.message.set('Please open a .ascii input file')
         else:
-            ascii_phonons.call_blender(self.input_file, **self.call_blender_args)
+            if self.call_blender_args['montage']:
+                if self.call_blender_args['start_frame'] == self.call_blender_args['end_frame']:
+                    ascii_phonons.montage_static(self.input_file, ** self.call_blender_args)
+                else:
+                    ascii_phonons.montage_anim(self.input_file, ** self.call_blender_args)
+            else:
+                ascii_phonons.call_blender(self.input_file, **self.call_blender_args)
             self.message.set('Rendering complete')
 
     def preview(self):

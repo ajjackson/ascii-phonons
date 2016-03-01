@@ -101,18 +101,19 @@ vsim2blender.plotter.render(output_file='{out_file}', preview={preview})
         
 def montage_static(input_file, **options):
     mode_data = list(_qpt_freq_iter(input_file))
-    if options['output_file']:
-        output_basename = options['output_file']
-    else:
-        output_basename = 'phonon'
+
+    for param, default in (('output_file', 'phonon'),):
+        if not options[param]:
+            options[param] = default
 
     call_args = ['montage', '-font', 'Helvetica', '-pointsize', '18']
 
     # Render smaller image
     options.update({'preview': True})
 
+    output_basename = options['output_file']
     for index, (qpt, freq) in enumerate(mode_data):
-        options.update({'output_file': output_basename + str(index)})
+        options.update({'output_file': '.'.join((output_basename, str(index)))})
         options.update({'mode_index':index})
         call_blender(input_file, **options)
         call_args.extend(['-label', _flabelformat(freq),
@@ -122,7 +123,78 @@ def montage_static(input_file, **options):
     call(call_args)
 
     for index, (qpt, freq) in enumerate(mode_data):
-        os.remove(output_basename + str(index) + '.png')
+        os.remove('.'.join((output_basename, str(index), 'png')))
+
+def montage_anim(input_file, **options):
+    mode_data = list(_qpt_freq_iter(input_file))
+
+    for param, default in (('output_file', 'phonon'),
+                               ('start_frame', 0),
+                               ('n_frames', 30)):
+        if not param in options or not options[param]:
+            options[param] = default
+
+    if not 'end_frame' in options or not options['end_frame']:
+        options['end_frame'] = options['start_frame'] + options['n_frames'] - 1
+
+    # Render smaller image, take over gif generation
+    options.update({'preview': True, 'gif': False})
+    output_basename = options['output_file']
+    labels = []
+    for index, (qpt, freq) in enumerate(mode_data):
+        options.update({'output_file': '.'.join((output_basename, str(index), ''))})
+        options.update({'mode_index':index})
+        call_blender(input_file, **options)
+        labels.append(_flabelformat(freq))
+
+    print("Compiling tiled images...")
+
+    frames = range(options['start_frame'], options['end_frame'] + 1)
+    for frame in frames:
+        montage_call_args = ['montage', '-font', 'Helvetica', '-pointsize', '18']
+        for index, label in enumerate(labels):
+            montage_call_args.extend(['-label', label, 
+                                      '.'.join((output_basename,
+                                                '{0}'.format(index),
+                                                '{0:04d}'.format(frame),
+                                                'png'))])
+
+        montage_call_args.append('.'.join((output_basename, '{0}'.format(frame),
+                                          'montage.png')))
+        try:
+            call(montage_call_args)
+        except OSError as err:
+            raise Exception("\n\nCould not run Imagemagick convert to create .gif.\n" +
+                            "Error message: {0}\n".format(err) +
+                            "Are you sure you have Imagemagick installed?\n")
+
+    print("Joining images into .gif file")
+
+    convert_call_args = (['convert', '-delay', '10'] +
+                             ['.'.join((output_basename, '{0}'.format(frame), 'montage.png')) 
+                                  for frame in frames]
+                             + ['-loop', '0', output_basename + '.gif'])
+    call(convert_call_args)
+    print("Cleaning up...")
+    for frame in frames:
+        for index in range(len(labels)):
+            os.remove('.'.join((output_basename, '{0}'.format(index),
+                                    '{0:04d}'.format(frame), 'png')))
+        os.remove('.'.join((output_basename, '{0}'.format(frame), 
+                                'montage', 'png')))
+
+    print("Done!")
+
+    # if gif and output_file:
+    #     tmp_files = [image_tmp_filename + '{0:04.0f}'.format(i) + '.png' for i in range(n_frames)]
+    #     convert_call_args = ['convert', '-delay', '10'] + tmp_files + ['-loop', '0', gif_name]
+    
+
+    # for index, (qpt, freq) in enumerate(mode_data):
+    #     for frame in range(options['start_frame'], options['end_frame'] + 1):
+    #         os.remove(output_basename + str(index) + '.png')
+
+
 
 def _flabelformat(freq):
     """Formatted frequency labels"""
@@ -131,9 +203,6 @@ def _flabelformat(freq):
         return ' '
     else:
         return label
-
-def montage_anim(input_file, **options):
-    pass
 
 def _qpt_freq_iter(ascii_file):
     """Generate tuples of qpt (as list) and frequency"""
