@@ -188,22 +188,23 @@ class Application(tk.Frame):
 
     def update_args(self):
         self.call_blender_args.update({
-            'start_frame': self.start_frame.get(),
-            'end_frame': self.end_frame.get(),
-            'n_frames': self.n_frames.get(),
-            'output_file': self.output_file.get(),
-            'supercell': (self.supercell_X.get(),self.supercell_Y.get(),self.supercell_Z.get()),
-            'bbox_offset': (self.unitcell_X.get(),self.unitcell_Y.get(),self.unitcell_Z.get()),
-            'bbox': self.show_box.get(),
-            'vectors': self.arrows.get(),
-            'scale_factor': self.atomsize.get(),
-            'vib_magnitude': self.vibsize.get(),
-            'arrow_magnitude': self.arrowsize.get(),
-            'gif': self.gif.get(),
+            'input_file': self.input_file,
             'mode_index': self.mode.get(),
-            'montage': self.montage.get(),
-            'miller': (self.miller_a.get(), self.miller_b.get(), self.miller_c.get()),
             'camera_rot': self.camera_rot.get(),
+            'end_frame': self.end_frame.get(),
+            'gif': self.gif.get(),
+            'miller': (self.miller_a.get(), self.miller_b.get(), self.miller_c.get()),
+            'montage': self.montage.get(),
+            'n_frames': self.n_frames.get(),
+            'offset_box': (self.unitcell_X.get(),self.unitcell_Y.get(),self.unitcell_Z.get()),
+            'output_file': self.output_file.get(),
+            'scale_arrow': self.arrowsize.get(),
+            'scale_atom': self.atomsize.get(),
+            'scale_vib': self.vibsize.get(),
+            'show_box': self.show_box.get(),
+            'start_frame': self.start_frame.get(),
+            'supercell': (self.supercell_X.get(),self.supercell_Y.get(),self.supercell_Z.get()),
+            'vectors': self.arrows.get(),
             'zoom': self.zoom.get()
             }) 
         return self.call_blender_args
@@ -215,17 +216,17 @@ class Application(tk.Frame):
         else:
             if self.call_blender_args['montage']:
                 if self.call_blender_args['start_frame'] == self.call_blender_args['end_frame']:
-                    ascii_phonons.montage_static(self.input_file, ** self.call_blender_args)
+                    ascii_phonons.montage_static(**self.call_blender_args)
                 else:
-                    ascii_phonons.montage_anim(self.input_file, ** self.call_blender_args)
+                    ascii_phonons.montage_anim(** self.call_blender_args)
             else:
-                ascii_phonons.call_blender(self.input_file, **self.call_blender_args)
+                ascii_phonons.call_blender(**self.call_blender_args)
             self.message.set('Rendering complete')
 
     def preview(self):
-        kwargs = self.update_args().copy()
-        kwargs.update({'preview':self.preview_file, 'gif':False})
-        ascii_phonons.call_blender(self.input_file,  **kwargs)
+        options = self.update_args().copy()
+        options.update({'preview':self.preview_file, 'gif':False})
+        ascii_phonons.call_blender(**options)
 
         # Pack the preview image into the right frame
         self.preview_pil = ImageTk.Image.open(self.preview_file + '.png')
@@ -235,9 +236,9 @@ class Application(tk.Frame):
         self.message.set('Preview complete')
 
     def launch_blender(self):
-        kwargs = self.update_args().copy()
-        kwargs.update({'output_file':False, 'gui':True})
-        ascii_phonons.call_blender(self.input_file, **kwargs)
+        options = self.update_args().copy()
+        options.update({'output_file':False, 'gui':True})
+        ascii_phonons.call_blender(**options)
                 
 if __name__ == "__main__":
     root = tk.Tk()

@@ -319,7 +319,7 @@ def open_mode(**options):
     start_frame = config.getint('general', 'start_frame', fallback=0)
     n_frames = config.getint('general', 'n_frames', fallback=30)
 
-    preview = config.getboolean('general', 'preview', fallback=False)
+    preview = config.get('general', 'preview', fallback=False)
     if preview:
         static = True
     else:
@@ -467,8 +467,9 @@ def setup_render_freestyle(**options):
         (default=start_frame+n_frames-1)
     :type end_frame: int or None
     :param preview: Write to a temporary preview file at low resolution
-        instead of the output. Use first frame only.
-    :type preview: str or Boolean False
+        instead of the output. Use first frame only. If no preview, set to
+        empty string ''
+    :type preview: str
     :param config: Path to user configuration settings -- this function makes
         use of 'x_pixels', 'y_pixels', 'box_thickness' and 'outline_thickness'
         keys in [general] section and 'outline' and 'box' keys in [colours]
@@ -598,10 +599,14 @@ def render(scene=False, output_file=False, preview=False):
         calls to render() can be harmlessly included in boilerplate.
     :type output_file: String or Boolean False
     :param preview: Write to a temporary preview file at low resolution
-        instead of the output
-    :type preview: str or Boolean False
+        instead of the output. Set to empty string '' if not a preview.
+    :type preview: str
 
     """
+    print(preview)
+    print(output_file)
+    if preview:
+        output_file = preview
 
     if (not output_file) or output_file == 'False':
         pass
@@ -611,8 +616,6 @@ def render(scene=False, output_file=False, preview=False):
             scene = bpy.context.scene.name
 
         # Set output path (No sanitising or absolutising at this stage)
-        if preview:
-            output_file = preview
         bpy.data.scenes[scene].render.filepath = output_file
 
         # Work out if animation or still is required

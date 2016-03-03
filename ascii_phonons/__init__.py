@@ -23,6 +23,7 @@ def call_blender(**options):
     if not 'input_file' in options:
         raise Exception('No .ascii file provided')
     options['input_file'] = path.abspath(options['input_file'])
+
     if 'output_file' in options and options['output_file']:
         output_file = path.abspath(options['output_file'])
     handle, python_tmp_file = tempfile.mkstemp(suffix='.py', dir='.')
@@ -66,10 +67,10 @@ config = vsim2blender.read_config(user_config='{config}')
 
 vsim2blender.plotter.open_mode(**{options})
 vsim2blender.plotter.setup_render_freestyle(**{options})
-vsim2blender.plotter.render(output_file='{out_file}', preview={preview})
+vsim2blender.plotter.render(output_file='{out_file}', preview='{preview}')
 """.format(options=str(options), add_path=addons_path, config=config,
            out_file=options.get('output_file', ''),
-           preview=str(options.get('preview', False)))
+           preview=options.get('preview', ''))
 
     with open(python_tmp_file, 'w') as f:
         f.write(python_txt)

@@ -1,0 +1,46 @@
+User configuration:
+
+- Useful for Blender Python module to be able to read config files directly
+- But GUI should be able to reflect config file settings
+- Easier to unpack regular dictionary to blender call
+- Solution: two ways of packing options:
+  - Conf file format (with sections, everything is a string)
+  -  options dict (flat dictionary, sensible types, INCLUDES user conf path)
+- "model" section contains parameters associated with specific image setup
+- input file
+
+| section | config            | options arg       | notes                 |
+|---------+-------------------+-------------------+-----------------------|
+| general |                   | input_file        |                       |
+|         |                   | mode_index        |                       |
+|         |                   | arrow_magnitude   | rename to scale_arrow |
+|         |                   | bbox              | rename to show_box    |
+|         |                   | bbox_offset       | rename to offset_box  |
+|         |                   | camera_rot        |                       |
+|         |                   | config            |                       |
+|         |                   | do_mass_weighting |                       |
+|         |                   | end_frame         |                       |
+|         |                   | gif               |                       |
+|         |                   | gui               |                       |
+|         |                   | miller            |                       |
+|         |                   | montage           |                       |
+|         |                   | n_frames          |                       |
+|         |                   | output_file       |                       |
+|         |                   | preview           |                       |
+|         |                   | scale_factor      | rename scale_atom     |
+|         |                   | start_frame       |                       |
+|         |                   | static            | replaces animate      |
+|         |                   | supercell         |                       |
+|         |                   | vectors           |                       |
+|         |                   | vib_magnitude     | rename to scale_vib   |
+|         |                   | zoom              |                       |
+|         | box_thickness     |                   |                       |
+|         | outline_thickness |                   |                       |
+|         | blender_bin       | blender_bin       |                       |
+| colours | arrow             |                   |                       |
+|         | background        |                   |                       |
+|         | box               |                   |                       |
+|         | [elements]        |                   |                       |
+|         | outline           |                   |                       |
+| radii   | [elements]        |                   |                       |
+| masses  | [elements]        |                   |                       |
