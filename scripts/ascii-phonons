@@ -14,21 +14,21 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("input_file",
                         help="Path to input file. ASCII formatted for v_sim.")
-    parser.add_argument("-m","--mode_index", default=0,
+    parser.add_argument("-m","--mode_index", default=0, type=int,
                         help="Zero-based position of mode in ASCII file")
     parser.add_argument("-b", "--blender_bin", help="Path to Blender binary")
     parser.add_argument("--camera_rot", type=float, help="View rotation in degrees")
     parser.add_argument("--config", type=str, default='',
                         help="User configuration file")
-    parser.add_argument("-d","--supercell", nargs=3, default=(2,2,2),
+    parser.add_argument("-d","--supercell", nargs=3,
                         help="Supercell dimensions; set of three integers")
     parser.add_argument("--do_mass_weighting", action="store_true",
                         help="Apply mass weighting to atom movements. This has"
                              " usually already been done in the construction "
                              "of the .ascii file, and should not be repeated.")
-    parser.add_argument("--end_frame", type=int, default=None,
+    parser.add_argument("--end_frame", type=int,
                         help="Ending frame number for the animation")
-    parser.add_argument("-f","--n_frames", type=int, default=30,
+    parser.add_argument("-f","--n_frames", type=int,
                         help="Number of frames in a complete cycle "
                              "(default number of frames for animation)")
     parser.add_argument("--gif", action="store_true",
@@ -38,47 +38,59 @@ if __name__ == "__main__":
     parser.add_argument("-g", "--gui", action="store_true",
                         help="Open full Blender GUI session, even if "
                              "rendering output")
-    parser.add_argument("--miller", nargs=3, type=float, default=(0,1,0),
+    parser.add_argument("--miller", nargs=3, type=float,
                         help="Miller indices for view")
     parser.add_argument("--montage", action="store_true",
                         help="Create tiled montage with Imagemagick")
-    parser.add_argument("--no_box", default=False, action="store_true",
+    parser.add_argument("--no_box", action="store_true",
                         help="Hide bounding box")
-    parser.add_argument("--offset_box", nargs=3, type=float, default=(0,0,0),
+    parser.add_argument("--offset_box", nargs=3, type=float,
                         help="Bounding box position (lattice coordinates)")
-    parser.add_argument("-o","--output_file", default=False,
+    parser.add_argument("-o","--output_file",
                         help="Render to output. GUI will not open for further "
                              "editing unless -g (--gui) flag is used")
-    parser.add_argument("--start_frame", type=int, default=None,
+    parser.add_argument("--start_frame", type=int,
                         help="Starting frame number for the animation")
-    parser.add_argument("--scale_arrow", type=float, default=20.0,
+    parser.add_argument("--scale_arrow", type=float,
                         help="Normalised magnitude of static arrows")
-    parser.add_argument("--scale_atom", type=float, default=1.0,
+    parser.add_argument("--scale_atom", type=float,
                         help="Size of atoms, relative to covalent radius")
-    parser.add_argument("--scale_vib", type=float, default=1.0,
+    parser.add_argument("--scale_vib", type=float,
                         help="Normalised magnitude of animated phonons")
     parser.add_argument("-s","--static", action="store_true",
                         help="Static image (disable animation)")
     parser.add_argument("-v","--vectors", action="store_true",
                         help="Indicate eigenvectors with static arrows.")
-    parser.add_argument("--zoom", type=float, default=1.,
+    parser.add_argument("--zoom", type=float,
                         help="Camera zoom adjustment")
 
-    # Parse args and convert to a dictionary
+    # Parse args and convert all non-False/zero/none items to a dictionary
     args = parser.parse_args()
-    options = vars(args)
+    options = {k: v for k, v in vars(args).iteritems() if v}
 
     user_config = args.config
     if user_config == '':
         pass
     else:
         options['config'] = os.path.abspath(user_config)
+    
+    input_file = args.input_file
+    options['input_file'] = os.path.abspath(input_file)
 
-    options['show_box'] = not options['no_box']
+    if 'no_box' in options:
+        options['show_box'] = False
 
-    if options['montage'] and options['animate']:
-        ascii_phonons.montage_anim(args.input_file, **options)        
-    elif options['montage']:
-        ascii_phonons.montage_static(args.input_file, **options)
+    # # Remove unset items so they don't clobber config settings
+    # for boolopt in ('static', 'vectors', 'montage', 
+    #                 'do_mass_weighting', 'gif', 'gui'):
+    #     if options[boolopt] == False:
+    #         options.pop(boolopt)
+    # for noneopt in ('start_frame', 'miller', 'output_file', 'end_frame',
+    #                     'zoom', 'n_frames')
+
+    if 'montage' in options and not 'static' in options:
+        ascii_phonons.montage_anim(**options)        
+    elif 'montage' in options:
+        ascii_phonons.montage_static(**options)
     else:
-        ascii_phonons.call_blender(args.input_file, **options)
+        ascii_phonons.call_blender(**options)

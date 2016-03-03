@@ -28,7 +28,7 @@ def draw_bounding_box(cell, offset=(0, 0, 0)):
     :type offset: 3-tuple in lattice coordinates
     """
     a, b, c = cell
-    verts = map(tuple, [(0, 0, 0), a, a+b, b, c, c+a, c+a+b, c+b])
+    verts = list(map(tuple, [(0, 0, 0), a, a+b, b, c, c+a, c+a+b, c+b]))
     faces = [(0, 1, 2, 3), (0, 1, 5, 4), (1, 2, 6, 5),
              (2, 3, 7, 6), (3, 0, 4, 7), (4, 5, 6, 7)]
     box_mesh = bpy.data.meshes.new("Bounding Box")
@@ -154,7 +154,7 @@ def add_atom(position, lattice_vectors, symbol, cell_id=(0, 0, 0),
     else:
         radius = 1.0
 
-    size = radius * config.getfloat('general', 'scale_atom')
+    size = radius * config.getfloat('general', 'scale_atom', fallback=1.)
     bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3,
                                           location=cartesian_loc,
                                           size=size)
@@ -260,8 +260,8 @@ def open_mode(**options):
     """
     Open v_sim ascii file in Blender
 
-    :param ascii_file: Path to file
-    :type ascii_file: str
+    :param input_file: Path to file
+    :type input_file: str
     :param camera_rot: Camera tilt adjustment in degrees
     :type camera_rot: float
     :param config: Settings from configuration files
@@ -311,7 +311,7 @@ def open_mode(**options):
     # Load user config and combine/overwrite with optional args
     config = vsim2blender.read_config(
         user_config=options.get('config', ''))
-    for key, value in options.iteritems():
+    for key, value in options.items():
         config['general'][key] = dumps(value)
 
     # Work out actual frame range.
@@ -321,7 +321,7 @@ def open_mode(**options):
 
     preview = config.getboolean('general', 'preview', fallback=False)
     if preview:
-        static = False
+        static = True
     else:
         static = config.getboolean('general', 'static', fallback=False)
 
@@ -331,11 +331,9 @@ def open_mode(**options):
         end_frame = config.getint('general', 'end_frame',
                                   fallback=(start_frame +
                                             n_frames - 1))
-
-
-    if 'ascii_file' in options:
+    if 'input_file' in options:
         (vsim_cell,
-         positions, symbols, vibs) = import_vsim(options['ascii_file'])
+         positions, symbols, vibs) = import_vsim(options['input_file'])
         lattice_vectors = cell_vsim_to_vectors(vsim_cell)
     else:
         raise Exception('No .ascii file provided')
@@ -351,15 +349,16 @@ def open_mode(**options):
 
     # Draw bounding box
     if (config.getboolean('general', 'show_box', fallback=True)):
-        bbox_offset = json.loads(config.get('general', 'offset_box',
-                                            fallback=(0, 0, 0)))
+        bbox_offset = loads(config.get('general', 'offset_box',
+                                       fallback='[0, 0, 0]'))
         bbox_offset = Vector(bbox_offset)
         draw_bounding_box(lattice_vectors, offset=bbox_offset)
 
     # Draw atoms after checking config
-    supercell = json.loads(config.get('general', 'supercell',
-                                      fallback=(2, 2, 2)))
-    vectors = config.getboolean('general','vectors')
+    mode_index = config.getint('general', 'mode_index', fallback=0)
+    supercell = loads(config.get('general', 'supercell',
+                                 fallback='[2, 2, 2]'))
+    vectors = config.getboolean('general', 'vectors', fallback=False)
     for cell_id_tuple in itertools.product(range(supercell[0]),
                                            range(supercell[1]),
                                            range(supercell[2])):
@@ -397,7 +396,8 @@ def open_mode(**options):
                                         lattice_vectors=lattice_vectors,
                                         cell_id=cell_id)
                 scale = (arrow_vector.length *
-                         config.get('general', 'scale_arrow', fallback=1.])
+                         config.getfloat('general', 'scale_arrow',
+                                         fallback=1.))
                 add_arrow(loc=loc,
                           mass=mass,
                           rot_euler=vector_to_euler(arrow_vector),
@@ -411,10 +411,7 @@ def open_mode(**options):
     # cameras as 'cameras' have different attributes, so need to look up
     # camera in bpy.data.cameras to set field of view.
 
-    camera.setup_camera(lattice_vectors, supercell,
-                        camera_rot=camera_rot, zoom=zoom,
-                        field_of_view=0.2, miller=miller,
-                        scene=bpy.context.scene)
+    camera.setup_camera(lattice_vectors, field_of_view=0.2, config=config)
 
     bpy.context.scene.world = bpy.data.worlds['World']
     bpy.data.worlds['World'].horizon_color = str2list(config.get(
@@ -456,8 +453,7 @@ def setup_render(start_frame=0, end_frame=None, n_frames=30, preview=False):
     bpy.context.scene.frame_end = end_frame
 
 
-def setup_render_freestyle(start_frame=0, end_frame=None, n_frames=30,
-                           preview=False, config=False):
+def setup_render_freestyle(**options):
     """
     Setup the render setting
 
@@ -473,34 +469,39 @@ def setup_render_freestyle(start_frame=0, end_frame=None, n_frames=30,
     :param preview: Write to a temporary preview file at low resolution
         instead of the output. Use first frame only.
     :type preview: str or Boolean False
-    :param config: Configuration settings -- this function makes use of
-                   'box_thickness' and 'outline_thickness' keys in
-                   [general] section and 'outline' and 'box' keys in
-                   [colours] section
+    :param config: Configuration settings -- this function makes use of 
+                   'x_pixels', 'y_pixels', 'box_thickness' and 
+                   'outline_thickness' keys in [general] section and 'outline' 
+                   and 'box' keys in [colours] section
     :type config: configparser.ConfigParser
 
     """
-    if type(start_frame) != int:
-        start_frame = 0
-    if preview:
+    start_frame = options.get('start_frame', 0)
+    n_frames = options.get('n_frames', 30)
+    
+    if options.get('preview', False) or options.get('static', False):
         end_frame = start_frame
-    elif type(end_frame) != int:
-        end_frame = start_frame + n_frames - 1
-
-    if not config:
-        config = vsim2blender.read_config()
-
-    bpy.context.scene.render.resolution_x = 1080
-    bpy.context.scene.render.resolution_y = 1080
-    if preview:
-        bpy.context.scene.render.resolution_percentage = 20
     else:
-        bpy.context.scene.render.resolution_percentage = 50
+        end_frame = options.get('end_frame',
+                                start_frame + n_frames - 1)
+
+    config = options.get('config',
+                         vsim2blender.read_config())
+
+    x_pixels = config.getint('general','x_pixels', fallback=512)
+    y_pixels = config.getint('general','y_pixels', fallback=512)
+
+    bpy.context.scene.render.resolution_x = x_pixels
+    bpy.context.scene.render.resolution_y = y_pixels
+    if options.get('preview', False):
+        bpy.context.scene.render.resolution_percentage = 40
+    else:
+        bpy.context.scene.render.resolution_percentage = 100
 
     # These flat renders don't use much memory, so render a single big
     # tiles for high speed
-    bpy.context.scene.render.tile_x = 1028
-    bpy.context.scene.render.tile_y = 1028
+    bpy.context.scene.render.tile_x = x_pixels
+    bpy.context.scene.render.tile_y = y_pixels
 
     bpy.context.scene.frame_start = start_frame
     bpy.context.scene.frame_end = end_frame

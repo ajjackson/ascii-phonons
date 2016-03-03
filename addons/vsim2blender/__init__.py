@@ -31,7 +31,7 @@ def read_config(user_config=''):
     """
     import os
     import configparser
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(allow_no_value=True)
 
     # Suppress default conversion to lower case as it makes periodic
     # table hard to read

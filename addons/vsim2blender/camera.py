@@ -1,29 +1,41 @@
 import bpy
 import math
 from mathutils import Vector
+from json import loads
+from vsim2blender import read_config
 
-def setup_camera(lattice_vectors, supercell, camera_rot=0,
-                        zoom=1., miller=(0,1,0), field_of_view=0.5,
-                        scene=bpy.context.scene):
+def setup_camera(lattice_vectors, field_of_view=0.5,
+                 scene=bpy.context.scene, config=read_config()):
     """
     Set up a camera looking along the y axis
 
     :param lattice_vectors: Lattice vectors of unit cell
     :type lattice_vectors: 3-tuple of 3-Vectors
-    :param supercell: Supercell dimensions
-    :type supercell: 3-tuple of ints
-    :param miller: Miller indices of target view. Floating-point values may be
-                   used for fine adjustments if desired.
-    :type miller: 3-tuple
-    :param camera_rot: Camera tilt adjustment in degrees
-    :type camera_rot: float
-    :param zoom: Camera zoom adjustment
-    :type zoom: float
     :param field_of_view: Camera field of view in radians
     :type field_of_view: float
     :param scene: Scene in which to insert camera object
     :type scene: bpy Scene
+    :param config: config settings. The following parameters in [general] are used:
+        camera_rot 
+            *(float cast to string)*
+            Camera tilt adjustment in degrees
+        miller
+            *(3-list of floats cast to str)*
+            Miller indices of target view. Floating-point values may be
+            used for fine adjustments if desired.
+        supercell
+            *(3-list of ints cast to str)*
+            Supercell dimensions
+        zoom
+            *(float)* Camera zoom adjustment
+    :type config: configparser.ConfigParser
+    
     """
+
+    camera_rot = config.getfloat('general', 'camera_rot', fallback=0)
+    miller = loads(config.get('general', 'miller', fallback='[0, 1, 0]'))
+    supercell = loads(config.get('general', 'miller', fallback='[2, 2, 2]'))
+    zoom = config.getfloat('general', 'zoom', fallback=1.)    
 
     a, b, c = [n * x for n, x in zip(supercell, lattice_vectors)]
     supercell_centre = 0.5 * sum([a,b,c], Vector((0.,0.,0.)))
