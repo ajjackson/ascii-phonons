@@ -8,11 +8,7 @@ ascii_phonons_path = os.path.abspath(os.path.join(
      os.path.dirname(os.path.realpath(__file__)), os.path.pardir))
 addons_path = os.path.join(ascii_phonons_path, 'addons')
 
-def call_blender(input_file, blender_bin=False, mode_index=0, supercell=(2,2,2),
-         animate=True, n_frames=30, start_frame=None, end_frame=None, bbox=True, bbox_offset=(0,0,0),
-         vectors=False, output_file=False, vib_magnitude=1.0, arrow_magnitude=1.0,
-         gui=False, gif=False, scale_factor=1.0, user_config=False, preview=False,
-         do_mass_weighting=False, miller=(0,1,0), camera_rot=0, zoom=1., montage=False):
+def call_blender(input_file, **options):
     """Generate a temporary script file and call Blender
 
     Typically Blender is called in batch mode to render one or a series
@@ -22,12 +18,12 @@ def call_blender(input_file, blender_bin=False, mode_index=0, supercell=(2,2,2),
     :type input_file: str
     """
     input_file = os.path.abspath(input_file)
-    if output_file:
+    if options['output_file']:
         output_file = os.path.abspath(output_file)
     handle, python_tmp_file = tempfile.mkstemp(suffix='.py', dir='.')
 
-    if blender_bin:
-        call_args = [blender_bin]
+    if 'blender_bin' in options:
+        call_args = [options['blender_bin']]
     else:
         import platform
         if platform.mac_ver()[0] != '':
@@ -36,7 +32,7 @@ def call_blender(input_file, blender_bin=False, mode_index=0, supercell=(2,2,2),
         else:
             call_args = ['blender']
 
-    if not animate:
+    if static:
         n_frames=1
 
     if gif and output_file:
@@ -66,7 +62,7 @@ import vsim2blender.plotter
 
 config = vsim2blender.read_config(user_config='{config}')
 
-vsim2blender.plotter.open_mode('{0}', {1}, animate={2}, n_frames={3},
+vsim2blender.plotter.open_mode('{0}', {1}, static={2}, n_frames={3},
                                 vectors={4}, scale_factor={5}, vib_magnitude={6},
                                 arrow_magnitude={7}, supercell=({8},{9},{10}),
                                 bbox={11}, bbox_offset={12}, config=config,
@@ -75,7 +71,7 @@ vsim2blender.plotter.open_mode('{0}', {1}, animate={2}, n_frames={3},
                                 camera_rot={camera_rot}, miller={miller}, zoom={zoom})
 vsim2blender.plotter.setup_render_freestyle(n_frames={3}, start_frame={start_frame}, end_frame={end_frame}, preview={preview}, config=config)
 vsim2blender.plotter.render(output_file='{out_file}', preview={preview})
-""".format(input_file, mode_index, animate, n_frames, vectors,
+""".format(input_file, mode_index, static, n_frames, vectors,
            scale_factor, vib_magnitude, arrow_magnitude,
            supercell[0], supercell[1], supercell[2], bbox, bbox_offset,
            out_file=output_file, add_path=addons_path, miller=miller, camera_rot=camera_rot, zoom=zoom,
