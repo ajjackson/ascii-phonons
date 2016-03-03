@@ -469,27 +469,27 @@ def setup_render_freestyle(**options):
     :param preview: Write to a temporary preview file at low resolution
         instead of the output. Use first frame only.
     :type preview: str or Boolean False
-    :param config: Configuration settings -- this function makes use of 
-                   'x_pixels', 'y_pixels', 'box_thickness' and 
-                   'outline_thickness' keys in [general] section and 'outline' 
-                   and 'box' keys in [colours] section
-    :type config: configparser.ConfigParser
+    :param config: Path to user configuration settings -- this function makes
+        use of 'x_pixels', 'y_pixels', 'box_thickness' and 'outline_thickness'
+        keys in [general] section and 'outline' and 'box' keys in [colours]
+        section
+    :type config: str
 
     """
     start_frame = options.get('start_frame', 0)
     n_frames = options.get('n_frames', 30)
-    
+
     if options.get('preview', False) or options.get('static', False):
         end_frame = start_frame
     else:
         end_frame = options.get('end_frame',
                                 start_frame + n_frames - 1)
 
-    config = options.get('config',
-                         vsim2blender.read_config())
+    config = options.get('config', '')
+    config = vsim2blender.read_config(config)
 
-    x_pixels = config.getint('general','x_pixels', fallback=512)
-    y_pixels = config.getint('general','y_pixels', fallback=512)
+    x_pixels = config.getint('general', 'x_pixels', fallback=512)
+    y_pixels = config.getint('general', 'y_pixels', fallback=512)
 
     bpy.context.scene.render.resolution_x = x_pixels
     bpy.context.scene.render.resolution_y = y_pixels

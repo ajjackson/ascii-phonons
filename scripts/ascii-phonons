@@ -20,7 +20,7 @@ if __name__ == "__main__":
     parser.add_argument("--camera_rot", type=float, help="View rotation in degrees")
     parser.add_argument("--config", type=str, default='',
                         help="User configuration file")
-    parser.add_argument("-d","--supercell", nargs=3,
+    parser.add_argument("-d","--supercell", nargs=3, type=int,
                         help="Supercell dimensions; set of three integers")
     parser.add_argument("--do_mass_weighting", action="store_true",
                         help="Apply mass weighting to atom movements. This has"

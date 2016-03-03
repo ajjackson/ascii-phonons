@@ -34,7 +34,7 @@ def setup_camera(lattice_vectors, field_of_view=0.5,
 
     camera_rot = config.getfloat('general', 'camera_rot', fallback=0)
     miller = loads(config.get('general', 'miller', fallback='[0, 1, 0]'))
-    supercell = loads(config.get('general', 'miller', fallback='[2, 2, 2]'))
+    supercell = loads(config.get('general', 'supercell', fallback='[2, 2, 2]'))
     zoom = config.getfloat('general', 'zoom', fallback=1.)    
 
     a, b, c = [n * x for n, x in zip(supercell, lattice_vectors)]
@@ -57,6 +57,7 @@ def setup_camera(lattice_vectors, field_of_view=0.5,
     camera_distance = max([dist_to_view_point(
         vertex, camera_direction_vector, field_of_view
         ) for vertex in vertices_from_center])
+    print(camera_distance)
 
     # Re-scale position vector
     camera_direction_vector.length = camera_distance

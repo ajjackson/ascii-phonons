@@ -38,6 +38,8 @@ def call_blender(**options):
 
     if options.get('static', False):
         n_frames = 1
+    else:
+        n_frames = options.get('n_frames', 30)
 
     if options.get('gif', False) and options.get('output_file', False):
         gif_name = options['output_file'] + '.gif'
@@ -81,9 +83,9 @@ vsim2blender.plotter.render(output_file='{out_file}', preview={preview})
     remove(python_tmp_file)
 
     if options.get('gif', False) and options.get('output_file', False):
-        tmp_files = ['.'.join(image_tmp_filename,
+        tmp_files = [''.join((options['output_file'],
                               '{0:04.0f}'.format(i),
-                              'png')
+                              '.png'))
                      for i in range(n_frames)]
         convert_call_args = (['convert', '-delay', '10']
                              + tmp_files
