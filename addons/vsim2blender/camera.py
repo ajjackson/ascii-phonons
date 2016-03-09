@@ -57,7 +57,6 @@ def setup_camera(lattice_vectors, field_of_view=0.5,
     camera_distance = max([dist_to_view_point(
         vertex, camera_direction_vector, field_of_view
         ) for vertex in vertices_from_center])
-    print(camera_distance)
 
     # Re-scale position vector
     camera_direction_vector.length = camera_distance

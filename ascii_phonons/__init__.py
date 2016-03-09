@@ -2,11 +2,98 @@ from os import path, remove
 from subprocess import call
 import tempfile
 import re
-import itertools
+import platform
+
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 
 ascii_phonons_path = path.abspath(path.join(
     path.dirname(path.realpath(__file__)), path.pardir))
 addons_path = path.join(ascii_phonons_path, 'addons')
+
+
+class Opts(object):
+    def __init__(self, options, parser=False):
+        """Robust option-handling for ascii-phonons GUI and CLI
+
+        Prioritises named options over config files.
+        If a configparser object is not explicitly provided, looks for
+        file in 'config' option.
+
+        Note that Opts objects use the original dictionary object rather
+        than a copy, and hence tracks the state of the options as they
+        are updated.
+
+        :param options: Collection of named options. Typically obtained
+            by defining an outer function as fun(**options).
+        :type options: dict
+        :param parser: Optionally provide a ConfigParser object which
+            has already been instantiated. If not provided, a new one
+            will be created if there is a 'config' item in ``options``.
+        :type parser: configparser.ConfigParser
+
+        """
+        self.options = options
+        self.config = parser
+
+        if not parser and 'config' in options:
+            self.config = configparser.ConfigParser()
+            self.config.read(options['config'])
+
+        self.bool_keys = (
+            'do_mass_weighting',
+            'gif',
+            'gui',
+            'montage',
+            'show_box',
+            'static')
+
+        self.float_keys = (
+            'box_thickness',
+            'camera_rot',
+            'outline_thickness'
+            'scale_arrow',
+            'scale_atom',
+            'scale_vib',
+            'zoom')
+
+        self.int_keys = (
+            'end_frame',
+            'mode_index',
+            'n_frames',
+            'start_frame')
+
+        self.tuple_keys = (
+            'offset_box',
+            'supercell')
+
+    def get(self, key, fallback):
+        """Get parameter, prioritising named options over config file
+
+        :param key: Name of option
+        :type key: str
+        :param fallback: Fallback value if key is not found in options
+            or config
+        :type fallback: any
+
+        """
+        if key in self.options:
+            return self.options[key]
+        elif self.config and self.config.has_option('general', key):
+            if key in self.bool_keys:
+                return self.config.getboolean('general', key)
+            elif key in self.float_keys:
+                return self.config.getfloat('general', key)
+            elif key in self.int_keys:
+                return self.config.getint('general', key)
+            elif key in self.tuple_keys:
+                return tuple(map(float,
+                                 self.config.get('general, key').split()
+                                 ))
+        else:
+            return fallback
 
 
 def call_blender(**options):
@@ -15,43 +102,37 @@ def call_blender(**options):
     Typically Blender is called in batch mode to render one or a series
     of .png image files.
 
-    :param input_file: Path to .ascii file specifying crystal structure
-        and vibrational modes
-    :type input_file: str
     """
     blender_osx = "/Applications/Blender/blender.app/Contents/MacOS/blender"
-    if not 'input_file' in options:
-        raise Exception('No .ascii file provided')
-    options['input_file'] = path.abspath(options['input_file'])
 
-    if 'output_file' in options and options['output_file']:
-        output_file = path.abspath(options['output_file'])
+    opts = Opts(options)
+
+    input_file = opts.get('input_file', False)
+    output_file = opts.get('output_file', False)
+
+    for f in input_file, output_file:
+        if f:
+            f = path.abspath(f)
+
     handle, python_tmp_file = tempfile.mkstemp(suffix='.py', dir='.')
 
-    if 'blender_bin' in options:
-        call_args = [options['blender_bin']]
+    if platform.mac_ver()[0] != '':
+        blender_default = blender_osx
     else:
-        import platform
-        if platform.mac_ver()[0] != '':
-            call_args = [blender_osx]
-        else:
-            call_args = ['blender']
+        blender_default = 'blender'
 
-    if options.get('static', False):
+    call_args = [opts.get('blender_bin', blender_default)]
+
+    if opts.get('static', False):
         n_frames = 1
     else:
-        n_frames = options.get('n_frames', 30)
+        n_frames = opts.get('n_frames', 30)
 
-    if options.get('gif', False) and options.get('output_file', False):
-        gif_name = options['output_file'] + '.gif'
+    if opts.get('gif', False) and output_file:
+        gif_name = output_file + '.gif'
         handle, image_tmp_filename = tempfile.mkstemp(dir='.')
         output_file = image_tmp_filename
         remove(image_tmp_filename)  # We only needed the name
-
-    if 'config' in options:
-        config = options['config']
-    else:
-        config = ''
 
     python_txt = """
 import sys
@@ -68,14 +149,15 @@ config = vsim2blender.read_config(user_config='{config}')
 vsim2blender.plotter.open_mode(**{options})
 vsim2blender.plotter.setup_render_freestyle(**{options})
 vsim2blender.plotter.render(output_file='{out_file}', preview='{preview}')
-""".format(options=str(options), add_path=addons_path, config=config,
-           out_file=options.get('output_file', ''),
-           preview=options.get('preview', ''))
+""".format(options=str(options), add_path=addons_path,
+           config=opts.get('config', ''),
+           out_file=output_file,
+           preview=opts.get('preview', ''))
 
     with open(python_tmp_file, 'w') as f:
         f.write(python_txt)
 
-    if options.get('output_file', False) and not options.get('gui', False):
+    if not opts.get('gui', False):
         call_args.append("--background")
 
     call_args = call_args + ["-P", python_tmp_file]
@@ -83,30 +165,31 @@ vsim2blender.plotter.render(output_file='{out_file}', preview='{preview}')
 
     remove(python_tmp_file)
 
-    if options.get('gif', False) and options.get('output_file', False):
-        tmp_files = [''.join((options['output_file'],
+    if opts.get('gif', False) and output_file:
+        tmp_files = [''.join((output_file,
                               '{0:04.0f}'.format(i),
                               '.png'))
                      for i in range(n_frames)]
-        convert_call_args = (['convert', '-delay', '10']
-                             + tmp_files
-                             + ['-loop', '0', gif_name])
+        convert_call_args = (['convert', '-delay', '10'] +
+                             tmp_files + ['-loop', '0', gif_name])
         try:
             call(convert_call_args)
         except OSError as err:
-            raise Exception("\n\nCould not run Imagemagick convert to" +
-                            " create .gif.\n Error message: {0}\n".format(err)
-                            + "Are you sure you have Imagemagick installed?\n")
+            raise Exception("\n\nCould not run Imagemagick convert to create" +
+                            " .gif.\n Error message: {0}\n".format(err) +
+                            "Are you sure you have Imagemagick installed?\n")
 
         for f in tmp_files:
             remove(f)
 
 
 def montage_static(**options):
-    mode_data = list(_qpt_freq_iter(options['input_file']))
+    """Render images for all phonon modes and present as array"""
+    opts = Opts(options)
+    mode_data = list(_qpt_freq_iter(opts.get('input_file')))
 
     for param, default in (('output_file', 'phonon'),):
-        if not options[param]:
+        if not opts.get(param, False):
             options[param] = default
 
     call_args = ['montage', '-font', 'Helvetica', '-pointsize', '18']
@@ -114,7 +197,7 @@ def montage_static(**options):
     # Render smaller image
     options.update({'preview': True})
 
-    output_basename = options['output_file']
+    output_basename = opts.get('output_file', 'phonon')
     for index, (qpt, freq) in enumerate(mode_data):
         options.update({'output_file': '.'.join((output_basename,
                                                  str(index)))})
@@ -131,20 +214,23 @@ def montage_static(**options):
 
 
 def montage_anim(**options):
-    mode_data = list(_qpt_freq_iter(options['input_file']))
+    """Render animations for all phonon modes and present as array"""
+    opts = Opts(options)
+    mode_data = list(_qpt_freq_iter(opts.get('input_file', None)))
 
     for param, default in (('output_file', 'phonon'),
                            ('start_frame', 0),
                            ('n_frames', 30)):
-        if not param in options or not options[param]:
+        if not opts.get(param, False):
             options[param] = default
 
-    if not 'end_frame' in options or not options['end_frame']:
-        options['end_frame'] = options['start_frame'] + options['n_frames'] - 1
+    if not opts.get('end_frame', False):
+        options['end_frame'] = (opts.get('start_frame', 0) +
+                                opts.get('n_frames', 30) - 1)
 
     # Render smaller image, take over gif generation
     options.update({'preview': True, 'gif': False})
-    output_basename = options['output_file']
+    output_basename = opts.get('output_file', 'phonon')
     labels = []
     for index, (qpt, freq) in enumerate(mode_data):
         options.update({'output_file': '.'.join((output_basename,
@@ -155,7 +241,8 @@ def montage_anim(**options):
 
     print("Compiling tiled images...")
 
-    frames = range(options['start_frame'], options['end_frame'] + 1)
+    frames = range(opts.get('start_frame', 0),
+                   opts.get('end_frame', 29) + 1)
     for frame in frames:
         montage_call_args = ['montage', '-font', 'Helvetica',
                              '-pointsize', '18']
@@ -178,10 +265,10 @@ def montage_anim(**options):
 
     print("Joining images into .gif file")
 
-    convert_call_args = (['convert', '-delay', '10']
-                         + ['.'.join((output_basename, '{0}'.format(frame),
-                            'montage.png')) for frame in frames]
-                         + ['-loop', '0', output_basename + '.gif'])
+    convert_call_args = (['convert', '-delay', '10'] +
+                         ['.'.join((output_basename, '{0}'.format(frame),
+                                    'montage.png')) for frame in frames]
+                         ['-loop', '0', output_basename + '.gif'])
     call(convert_call_args)
     print("Cleaning up...")
     for frame in frames:

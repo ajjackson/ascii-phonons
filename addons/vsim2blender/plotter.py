@@ -6,7 +6,6 @@ from mathutils import Vector, Matrix
 import math
 import cmath
 import itertools
-from json import dumps, loads
 import vsim2blender
 
 # sys.path.insert(0, os.path.abspath(script_directory)+'/..')
@@ -308,39 +307,34 @@ def open_mode(**options):
 
     """
 
-    # Load user config and combine/overwrite with optional args
-    config = vsim2blender.read_config(
-        user_config=options.get('config', ''))
-    for key, value in options.items():
-        config['general'][key] = dumps(value)
+    # Initialise Opts object, accessing options and user config
+    opts = vsim2blender.Opts(options)
 
     # Work out actual frame range.
     # Priority goes 1. static/preview 2. end_frame 3. n_frames
-    start_frame = config.getint('general', 'start_frame', fallback=0)
-    n_frames = config.getint('general', 'n_frames', fallback=30)
+    start_frame = opts.get('start_frame', 0)
+    n_frames = opts.get('n_frames', 30)
 
-    preview = config.get('general', 'preview', fallback=False)
+    preview = opts.get('preview', False)
     if preview:
         static = True
     else:
-        static = config.getboolean('general', 'static', fallback=False)
+        static = opts.get('static', False)
 
     if static:
         end_frame = start_frame
     else:
-        end_frame = config.getint('general', 'end_frame',
-                                  fallback=(start_frame +
-                                            n_frames - 1))
-    if 'input_file' in options:
-        (vsim_cell,
-         positions, symbols, vibs) = import_vsim(options['input_file'])
+        end_frame = opts.get('end_frame', start_frame + n_frames - 1)
+
+    input_file = opts.get('input_file', False)
+    if input_file:
+        (vsim_cell, positions, symbols, vibs) = import_vsim(input_file)
         lattice_vectors = cell_vsim_to_vectors(vsim_cell)
     else:
         raise Exception('No .ascii file provided')
 
-    if config.getboolean('general', 'do_mass_weighting',
-                         fallback=False):
-        masses = [float(config['masses'][symbol]) for symbol in symbols]
+    if opts.get('do_mass_weighting', False):
+        masses = [float(opts.config['masses'][symbol]) for symbol in symbols]
     else:
         masses = [1 for symbol in symbols]
 
@@ -348,17 +342,15 @@ def open_mode(**options):
     bpy.ops.scene.new(type='EMPTY')
 
     # Draw bounding box
-    if (config.getboolean('general', 'show_box', fallback=True)):
-        bbox_offset = loads(config.get('general', 'offset_box',
-                                       fallback='[0, 0, 0]'))
+    if (opts.get('show_box', True)):
+        bbox_offset = opts.get('offset_box', (0, 0, 0))
         bbox_offset = Vector(bbox_offset)
         draw_bounding_box(lattice_vectors, offset=bbox_offset)
 
     # Draw atoms after checking config
-    mode_index = config.getint('general', 'mode_index', fallback=0)
-    supercell = loads(config.get('general', 'supercell',
-                                 fallback='[2, 2, 2]'))
-    vectors = config.getboolean('general', 'vectors', fallback=False)
+    mode_index = opts.get('mode_index', 0)
+    supercell = (opts.get('supercell', (2, 2, 2)))
+    vectors = opts.get('vectors', False)
     for cell_id_tuple in itertools.product(range(supercell[0]),
                                            range(supercell[1]),
                                            range(supercell[2])):
@@ -371,7 +363,7 @@ def open_mode(**options):
                             cell_id=cell_id,
                             name='{0}_{1}_{2}{3}{4}'.format(
                                 atom_index, symbol, *cell_id_tuple),
-                            config=config)
+                            config=opts.config)
             if vectors or not static:
                 displacement_vector = vibs[mode_index].vectors[atom_index]
                 qpt = vibs[mode_index].qpt
@@ -385,9 +377,7 @@ def open_mode(**options):
                                   start_frame=start_frame,
                                   end_frame=end_frame,
                                   n_frames=n_frames,
-                                  magnitude=config.getfloat('general',
-                                                            'scale_vib',
-                                                            fallback=1.),
+                                  magnitude=opts.get('scale_vib', 1.),
                                   mass=mass)
             if vectors:
                 arrow_vector = vector_with_phase(atom, qpt_cartesian,
@@ -396,14 +386,13 @@ def open_mode(**options):
                                         lattice_vectors=lattice_vectors,
                                         cell_id=cell_id)
                 scale = (arrow_vector.length *
-                         config.getfloat('general', 'scale_arrow',
-                                         fallback=1.))
+                         opts.get('scale_arrow', 1.))
                 add_arrow(loc=loc,
                           mass=mass,
                           rot_euler=vector_to_euler(arrow_vector),
                           scale=scale)
     if vectors:
-        col = str2list(config.get('colours', 'arrow',
+        col = str2list(opts.config.get('colours', 'arrow',
                                   fallback='0. 0. 0.'))
         bpy.data.materials['Arrow'].diffuse_color = col
 
@@ -411,10 +400,10 @@ def open_mode(**options):
     # cameras as 'cameras' have different attributes, so need to look up
     # camera in bpy.data.cameras to set field of view.
 
-    camera.setup_camera(lattice_vectors, field_of_view=0.2, config=config)
+    camera.setup_camera(lattice_vectors, field_of_view=0.2, config=opts.config)
 
     bpy.context.scene.world = bpy.data.worlds['World']
-    bpy.data.worlds['World'].horizon_color = str2list(config.get(
+    bpy.data.worlds['World'].horizon_color = str2list(opts.config.get(
         'colours', 'background', fallback='0.5 0.5 0.5'))
 
 
@@ -477,24 +466,23 @@ def setup_render_freestyle(**options):
     :type config: str
 
     """
-    start_frame = options.get('start_frame', 0)
-    n_frames = options.get('n_frames', 30)
 
-    if options.get('preview', False) or options.get('static', False):
+    opts = vsim2blender.Opts(options)
+    print(list(opts.config['general'].items()))
+    start_frame = opts.get('start_frame', 0)
+    n_frames = opts.get('n_frames', 30)
+
+    if opts.get('preview', False) or opts.get('static', False):
         end_frame = start_frame
     else:
-        end_frame = options.get('end_frame',
-                                start_frame + n_frames - 1)
+        end_frame = opts.get('end_frame', start_frame + n_frames - 1)
 
-    config = options.get('config', '')
-    config = vsim2blender.read_config(config)
-
-    x_pixels = config.getint('general', 'x_pixels', fallback=512)
-    y_pixels = config.getint('general', 'y_pixels', fallback=512)
+    x_pixels = opts.get('x_pixels', 512)
+    y_pixels = opts.get('y_pixels', 512)
 
     bpy.context.scene.render.resolution_x = x_pixels
     bpy.context.scene.render.resolution_y = y_pixels
-    if options.get('preview', False):
+    if opts.get('preview', False):
         bpy.context.scene.render.resolution_percentage = 40
     else:
         bpy.context.scene.render.resolution_percentage = 100
@@ -509,43 +497,41 @@ def setup_render_freestyle(**options):
 
     bpy.context.scene.render.use_freestyle = True
 
-    # Wireframe box and add to "Group" for exclusion from outlining
-    # Freestyle doesn't work with wireframes
-    bpy.data.materials['Bounding Box'].type = 'SURFACE'
-    bpy.data.objects['Bounding Box'].select = True
-
-    bpy.ops.object.modifier_add(type='SUBSURF')
-    mesh_to_wireframe(bpy.data.objects['Bounding Box'])
-    mark_edges(bpy.data.objects['Bounding Box'])
-    # bpy.ops.object.group_add()
-
-    # Bounding box line settings
-    bpy.ops.scene.freestyle_lineset_add()
     renderlayer = bpy.context.scene.render.layers['RenderLayer']
-    boxlines = renderlayer.freestyle_settings.linesets.active
-    boxlinestyle = boxlines.linestyle
-    boxlinestyle.thickness = float(config.get('general',
-                                              'box_thickness',
-                                              fallback=5))
-    boxlinestyle.color = str2list(config.get('colours',
-                                             'box',
-                                             fallback='1. 1. 1.'))
-    # Bounding box tracer ignores everything but Freestyle marked edges
-    boxlines.select_silhouette = False
-    boxlines.select_border = False
-    boxlines.select_crease = False
-    boxlines.select_edge_mark = True
+
+    if opts.get('show_box', True):
+        # Wireframe box and add to "Group" for exclusion from outlining
+        # Freestyle doesn't work with wireframes
+        bpy.data.materials['Bounding Box'].type = 'SURFACE'
+        bpy.data.objects['Bounding Box'].select = True
+
+        bpy.ops.object.modifier_add(type='SUBSURF')
+        mesh_to_wireframe(bpy.data.objects['Bounding Box'])
+        mark_edges(bpy.data.objects['Bounding Box'])
+        # bpy.ops.object.group_add()
+
+        # Bounding box line settings
+        bpy.ops.scene.freestyle_lineset_add()
+        boxlines = renderlayer.freestyle_settings.linesets.active
+        boxlinestyle = boxlines.linestyle
+        boxlinestyle.thickness = opts.get('box_thickness', 5)
+        boxlinestyle.color = str2list(opts.config.get('colours',
+                                                      'box',
+                                                      fallback='1. 1. 1.'))
+        # Bounding box tracer ignores everything but Freestyle marked edges
+        boxlines.select_silhouette = False
+        boxlines.select_border = False
+        boxlines.select_crease = False
+        boxlines.select_edge_mark = True
 
     # Outline settings
     bpy.ops.scene.freestyle_lineset_add()
     atomlines = renderlayer.freestyle_settings.linesets.active
     atomlinestyle = atomlines.linestyle
-    atomlinestyle.thickness = float(config.get('general',
-                                               'outline_thickness',
-                                               fallback=3))
-    atomlinestyle.color = str2list(config.get('colours',
-                                              'outline',
-                                              fallback='0. 0. 0.'))
+    atomlinestyle.thickness = opts.get('outline_thickness', 3)
+    atomlinestyle.color = str2list(opts.config.get('colours',
+                                                   'outline',
+                                                   fallback='0. 0. 0.'))
 
 
 def str2list(string):

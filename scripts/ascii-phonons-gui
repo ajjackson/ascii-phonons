@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import sys
 from os.path import isdir, join, dirname, abspath
+from os import remove
 import tempfile
 
 pathname = abspath(sys.argv[0])
@@ -19,11 +20,12 @@ else:
     import tkFileDialog as filedialog
 
 from PIL import ImageTk
+from json import dumps
 
 preview_placeholder = join(ascii_phonons.ascii_phonons_path, 'images', 'preview.png')
 
 class Application(tk.Frame):
-    
+
     def __init__(self, master):
         self.button_defaults={'fill': "x", 'padx': 10, 'pady': 10}
 
@@ -31,9 +33,11 @@ class Application(tk.Frame):
         self.input_file = ''
         self.output_file = tk.StringVar(value='phonon')
         _, self.preview_file = tempfile.mkstemp(dir=tempfile.gettempdir())
+        _, self.tmp_conf_file = tempfile.mkstemp(dir=tempfile.gettempdir())
+        print(self.tmp_conf_file)
 
-        self.call_blender_args = {}
-        
+        self.initialise_conf()
+
         tk.Frame.__init__(self, master)
 
 
@@ -184,10 +188,19 @@ class Application(tk.Frame):
         """Set the output file path and root with a native system dialogue"""
         output_file = filedialog.asksaveasfilename()
         self.output_file.set(output_file)
-        
 
-    def update_args(self):
-        self.call_blender_args.update({
+    def initialise_conf(self):        
+        self.conf = configparser.ConfigParser()
+        self.conf.optionxform = lambda option: option.capitalize()
+        self.conf.add_section('general')
+
+    def write_conf(self, filename):
+        self.update_conf()
+        with open(filename, 'w') as f:
+            self.conf.write(f)
+
+    def update_conf(self):
+        for k, v in {
             'input_file': self.input_file,
             'mode_index': self.mode.get(),
             'camera_rot': self.camera_rot.get(),
@@ -206,39 +219,52 @@ class Application(tk.Frame):
             'supercell': (self.supercell_X.get(),self.supercell_Y.get(),self.supercell_Z.get()),
             'vectors': self.arrows.get(),
             'zoom': self.zoom.get()
-            }) 
-        return self.call_blender_args
+            }.iteritems():
+            if type(v) == str:
+                self.conf.set('general', k, v)
+            else:
+                self.conf.set('general', k, dumps(v))
+
 
     def render(self):
-        self.update_args()
+        self.update_conf()
+        self.conf.set('general', 'gui', False)
+        self.write_conf(self.tmp_conf_file)        
         if self.input_file == '' or isdir(self.input_file):
             self.message.set('Please open a .ascii input file')
         else:
-            if self.call_blender_args['montage']:
-                if self.call_blender_args['start_frame'] == self.call_blender_args['end_frame']:
-                    ascii_phonons.montage_static(**self.call_blender_args)
+            if self.conf.has_option('general', 'montage') and self.conf.getboolean('general', 'montage'):
+                if self.conf.getint('general', 'start_frame') == self.conf.getint('general', 'end_frame'):
+                    ascii_phonons.montage_static(config=self.tmp_conf_file, output_file=self.output_file)
                 else:
-                    ascii_phonons.montage_anim(** self.call_blender_args)
+                    ascii_phonons.montage_anim(config=self.tmp_conf_file, output_file=self.output_file)
             else:
-                ascii_phonons.call_blender(**self.call_blender_args)
+                ascii_phonons.call_blender(config=self.tmp_conf_file, gui=False)
             self.message.set('Rendering complete')
+        remove(self.tmp_conf_file)
 
     def preview(self):
-        options = self.update_args().copy()
-        options.update({'preview':self.preview_file, 'gif':False})
-        ascii_phonons.call_blender(**options)
-
+        self.update_conf()
+        self.write_conf(self.tmp_conf_file)                
+        ascii_phonons.call_blender(config=self.tmp_conf_file, preview=self.preview_file,
+                                   gif=False)
+        remove(self.tmp_conf_file)
+        
         # Pack the preview image into the right frame
         self.preview_pil = ImageTk.Image.open(self.preview_file + '.png')
         self.preview_tk = ImageTk.PhotoImage(self.preview_pil)
         self.preview_label.configure(image=self.preview_tk)
+
+        remove(self.preview_file + '.png')
         
         self.message.set('Preview complete')
 
     def launch_blender(self):
-        options = self.update_args().copy()
-        options.update({'output_file':False, 'gui':True})
-        ascii_phonons.call_blender(**options)
+        self.update_conf()
+        self.write_conf(self.tmp_conf_file)
+        ascii_phonons.call_blender(config=self.tmp_conf_file,
+                                   output_file=False, gui=True)
+        remove(self.tmp_conf_file)
                 
 if __name__ == "__main__":
     root = tk.Tk()
