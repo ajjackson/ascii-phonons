@@ -315,9 +315,10 @@ def open_mode(**options):
     start_frame = opts.get('start_frame', 0)
     n_frames = opts.get('n_frames', 30)
 
+    # Preview images default to static, others default to animated
     preview = opts.get('preview', False)
     if preview:
-        static = True
+        static = opts.get('static', True)
     else:
         static = opts.get('static', False)
 
@@ -400,7 +401,7 @@ def open_mode(**options):
     # cameras as 'cameras' have different attributes, so need to look up
     # camera in bpy.data.cameras to set field of view.
 
-    camera.setup_camera(lattice_vectors, field_of_view=0.2, config=opts.config)
+    camera.setup_camera(lattice_vectors, field_of_view=0.2, opts=opts)
 
     bpy.context.scene.world = bpy.data.worlds['World']
     bpy.data.worlds['World'].horizon_color = str2list(opts.config.get(
@@ -472,7 +473,7 @@ def setup_render_freestyle(**options):
     start_frame = opts.get('start_frame', 0)
     n_frames = opts.get('n_frames', 30)
 
-    if opts.get('preview', False) or opts.get('static', False):
+    if opts.get('static', False):
         end_frame = start_frame
     else:
         end_frame = opts.get('end_frame', start_frame + n_frames - 1)
@@ -589,12 +590,10 @@ def render(scene=False, output_file=False, preview=False):
     :type preview: str
 
     """
-    print(preview)
-    print(output_file)
     if preview:
         output_file = preview
 
-    if (not output_file) or output_file == 'False':
+    if (not output_file) or output_file == 'False' or output_file == '':
         pass
 
     else:

@@ -2,10 +2,11 @@ import bpy
 import math
 from mathutils import Vector
 from json import loads
-from vsim2blender import read_config
+from vsim2blender import read_config, Opts
+
 
 def setup_camera(lattice_vectors, field_of_view=0.5,
-                 scene=bpy.context.scene, config=read_config()):
+                 scene=bpy.context.scene, opts=Opts({})):
     """
     Set up a camera looking along the y axis
 
@@ -15,42 +16,49 @@ def setup_camera(lattice_vectors, field_of_view=0.5,
     :type field_of_view: float
     :param scene: Scene in which to insert camera object
     :type scene: bpy Scene
-    :param config: config settings. The following parameters in [general] are used:
-        camera_rot 
+    :param opts: Initialised Opts object. The following parameters,
+        either specified in the dict when Opts is initialised or under
+        [general] in the specified config file, are used:
+
+        camera_rot
             *(float cast to string)*
             Camera tilt adjustment in degrees
         miller
             *(3-list of floats cast to str)*
-            Miller indices of target view. Floating-point values may be
-            used for fine adjustments if desired.
+            Miller indices of target view. Floating-point values may
+            be used for fine adjustments if desired.
         supercell
             *(3-list of ints cast to str)*
             Supercell dimensions
         zoom
             *(float)* Camera zoom adjustment
-    :type config: configparser.ConfigParser
-    
+    :type opts: vsim2blender.Opts
+
     """
 
-    camera_rot = config.getfloat('general', 'camera_rot', fallback=0)
-    miller = loads(config.get('general', 'miller', fallback='[0, 1, 0]'))
-    supercell = loads(config.get('general', 'supercell', fallback='[2, 2, 2]'))
-    zoom = config.getfloat('general', 'zoom', fallback=1.)    
+    camera_rot = opts.get('camera_rot', 0)
+    miller = opts.get('miller', (0, 1, 0))
+    supercell = opts.get('supercell', (2, 2, 2))
+    zoom = opts.get('zoom', 1.)
 
     a, b, c = [n * x for n, x in zip(supercell, lattice_vectors)]
-    supercell_centre = 0.5 * sum([a,b,c], Vector((0.,0.,0.)))
-    vertices = [x for x in [Vector((0,0,0)), a, a+b, b, c, c+a, c+a+b, c+b]]    
+    supercell_centre = 0.5 * sum([a, b, c], Vector((0., 0., 0.)))
+    vertices = list([Vector((0, 0, 0)), a, a+b,
+                     b, c, c+a, c+a+b, c+b])
 
-    # Create an empty at the centre of the model for the camera to target
+    # Create an empty at the centre of the model for
+    # the camera to target
     bpy.ops.object.add(type='EMPTY', location=supercell_centre)
     empty_center = bpy.context.object
 
     # Use Miller index to create a vector to the camera
     # with arbitrary magnitude. Distances perpendicular to this vector
     # determine required camera distance
-    
-    camera_direction_vector = sum([i * x for i, x in zip(miller, reciprocal(lattice_vectors))],
-                                  Vector((0,0,0)))
+
+    camera_direction_vector = sum([i * x for i, x in
+                                   zip(miller,
+                                       reciprocal(lattice_vectors))],
+                                  Vector((0, 0, 0)))
 
     vertices_from_center = [v - supercell_centre for v in vertices]
 
@@ -67,8 +75,7 @@ def setup_camera(lattice_vectors, field_of_view=0.5,
     bpy.context.scene.camera = camera
     bpy.data.cameras[camera.name].angle = field_of_view
     bpy.data.cameras[camera.name].clip_end = 1e8
-    
-    
+
     # Use tracking to point camera at center of structure
     bpy.ops.object.constraint_add(type='TRACK_TO')
     camera.constraints['Track To'].target = empty_center
@@ -83,7 +90,8 @@ def setup_camera(lattice_vectors, field_of_view=0.5,
 
     # Tweak zoom level
     bpy.data.cameras[camera.name].lens = zoom * 75
-    
+
+
 def dist_to_view_point(point, camera_direction_vector, field_of_view):
     """
     Calculate the required camera distance along a vector to keep a
@@ -96,7 +104,7 @@ def dist_to_view_point(point, camera_direction_vector, field_of_view):
     :type camera_direction_vector: 3-Vector
     :param field_of_view: The camera field of view in radians
     :type field_of_view: Float
-    
+
     """
     projection = point.project(camera_direction_vector)
     rejection = point - projection
@@ -104,11 +112,14 @@ def dist_to_view_point(point, camera_direction_vector, field_of_view):
     distance = cone_width / math.sin(field_of_view)
     return distance
 
+
 def reciprocal(lattice_vectors):
     """
     Get reciprocal lattice vectors
 
-    Follows the equations outlined by Ashcroft & Mermin (Solid State Physics Ch 5, 1976)
+    Follows the equations outlined by Ashcroft & Mermin
+    (Solid State Physics Ch 5, 1976)
+
     b1 = 2 pi (a2 x a3)/(a1 . (a2 x a3))
     b2 = 2 pi (a3 x a1)/(a1 . (a2 x a3))
     b3 = 2 pi (a1 x a2)/(a1 . (a2 x a3))
@@ -122,7 +133,7 @@ def reciprocal(lattice_vectors):
     a1, a2, a3 = lattice_vectors
 
     denominator = a1.dot(a2.cross(a3)) / (2. * math.pi)
-    b1, b2, b3 = [x1.cross(x2)/denominator for x1, x2 in ((a2,a3),
-                                                          (a3,a1),
-                                                          (a1,a2))]
+    b1, b2, b3 = [x1.cross(x2)/denominator for x1, x2 in ((a2, a3),
+                                                          (a3, a1),
+                                                          (a1, a2))]
     return (b1, b2, b3)

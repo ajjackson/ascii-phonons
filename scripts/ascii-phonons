@@ -4,12 +4,11 @@ from __future__ import print_function
 import argparse
 import os
 import sys
-import ascii_phonons
 
 pathname = os.path.abspath(sys.argv[0])
 project_root = os.path.dirname(os.path.dirname(pathname))
 sys.path = [project_root] + sys.path
-
+import ascii_phonons
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -82,7 +81,6 @@ if __name__ == "__main__":
     if 'no_box' in options:
         options['show_box'] = False
 
-    print(options['config'])
     opts = ascii_phonons.Opts(options)
 
     if opts.get('montage', False) and opts.get('static', False):

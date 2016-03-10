@@ -92,6 +92,8 @@ class Opts(object):
                 return tuple(map(float,
                                  self.config.get('general, key').split()
                                  ))
+            else:
+                return self.config.get('general', key)
         else:
             return fallback
 
@@ -103,7 +105,8 @@ def call_blender(**options):
     of .png image files.
 
     """
-    blender_osx = "/Applications/Blender/blender.app/Contents/MacOS/blender"
+    blender_osx = ("/Applications/Blender/blender.app" +
+                   "/Contents/MacOS/blender")
 
     opts = Opts(options)
 
@@ -148,7 +151,8 @@ config = vsim2blender.read_config(user_config='{config}')
 
 vsim2blender.plotter.open_mode(**{options})
 vsim2blender.plotter.setup_render_freestyle(**{options})
-vsim2blender.plotter.render(output_file='{out_file}', preview='{preview}')
+vsim2blender.plotter.render(output_file='{out_file}',
+                            preview='{preview}')
 """.format(options=str(options), add_path=addons_path,
            config=opts.get('config', ''),
            out_file=output_file,
@@ -165,19 +169,24 @@ vsim2blender.plotter.render(output_file='{out_file}', preview='{preview}')
 
     remove(python_tmp_file)
 
-    if opts.get('gif', False) and output_file:
+    if opts.get('gif', False) and output_file and not opts.get('static',
+                                                               False):
+        frames = range(opts.get('start_frame', 0),
+                       opts.get('end_frame',
+                                opts.get('n_frames', 30)) + 1)
         tmp_files = [''.join((output_file,
                               '{0:04.0f}'.format(i),
                               '.png'))
-                     for i in range(n_frames)]
+                     for i in frames]
         convert_call_args = (['convert', '-delay', '10'] +
                              tmp_files + ['-loop', '0', gif_name])
         try:
             call(convert_call_args)
         except OSError as err:
-            raise Exception("\n\nCould not run Imagemagick convert to create" +
-                            " .gif.\n Error message: {0}\n".format(err) +
-                            "Are you sure you have Imagemagick installed?\n")
+            raise Exception("\n\nCould not run Imagemagick convert" +
+                            " to create .gif.\n Error message:" +
+                            " {0}\nAre you sure".format(err) +
+                            " you have Imagemagick installed?\n")
 
         for f in tmp_files:
             remove(f)
@@ -186,7 +195,7 @@ vsim2blender.plotter.render(output_file='{out_file}', preview='{preview}')
 def montage_static(**options):
     """Render images for all phonon modes and present as array"""
     opts = Opts(options)
-    mode_data = list(_qpt_freq_iter(opts.get('input_file')))
+    mode_data = list(_qpt_freq_iter(opts.get('input_file', None)))
 
     for param, default in (('output_file', 'phonon'),):
         if not opts.get(param, False):
@@ -194,17 +203,17 @@ def montage_static(**options):
 
     call_args = ['montage', '-font', 'Helvetica', '-pointsize', '18']
 
-    # Render smaller image
-    options.update({'preview': True})
-
+    # The output filename is used as the root for temporary images
+    # These are requested as "preview" images to reduce rescaling
     output_basename = opts.get('output_file', 'phonon')
+
     for index, (qpt, freq) in enumerate(mode_data):
-        options.update({'output_file': '.'.join((output_basename,
+        options.update({'preview': '.'.join((output_basename,
                                                  str(index)))})
         options.update({'mode_index': index})
         call_blender(**options)
         call_args.extend(['-label', _flabelformat(freq),
-                         options['output_file'] + '.png'])
+                         options['preview'] + '.png'])
     call_args.append(output_basename + '_montage.png')
 
     call(call_args)
@@ -229,12 +238,14 @@ def montage_anim(**options):
                                 opts.get('n_frames', 30) - 1)
 
     # Render smaller image, take over gif generation
-    options.update({'preview': True, 'gif': False})
+    # 'static' is explicitly set to False to override
+    # 'preview' defaults
+    options.update({'gif': False, 'static': False})
     output_basename = opts.get('output_file', 'phonon')
     labels = []
     for index, (qpt, freq) in enumerate(mode_data):
-        options.update({'output_file': '.'.join((output_basename,
-                                                 str(index), ''))})
+        options.update({'preview': '.'.join((output_basename,
+                                             str(index), ''))})
         options.update({'mode_index': index})
         call_blender(**options)
         labels.append(_flabelformat(freq))
@@ -243,6 +254,7 @@ def montage_anim(**options):
 
     frames = range(opts.get('start_frame', 0),
                    opts.get('end_frame', 29) + 1)
+
     for frame in frames:
         montage_call_args = ['montage', '-font', 'Helvetica',
                              '-pointsize', '18']
@@ -259,15 +271,18 @@ def montage_anim(**options):
         try:
             call(montage_call_args)
         except OSError as err:
-            raise Exception("\n\nCould not run Imagemagick convert to create "
-                            ".gif.\n Error message: {0}\n".format(err) +
-                            "Are you sure you have Imagemagick installed?\n")
+            raise Exception("\n\nCould not run Imagemagick convert " +
+                            "to create .gif.\n Error message: " +
+                            "{0}\nAre you sure you have".format(err) +
+                            " Imagemagick installed?\n")
 
     print("Joining images into .gif file")
 
     convert_call_args = (['convert', '-delay', '10'] +
-                         ['.'.join((output_basename, '{0}'.format(frame),
-                                    'montage.png')) for frame in frames]
+                         ['.'.join((output_basename,
+                                    '{0}'.format(frame),
+                                    'montage.png'))
+                          for frame in frames] +
                          ['-loop', '0', output_basename + '.gif'])
     call(convert_call_args)
     print("Cleaning up...")

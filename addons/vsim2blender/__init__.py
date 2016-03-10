@@ -95,14 +95,17 @@ class Opts(object):
             'scale_vib',
             'zoom')
 
+        self.float_tuple_keys = (
+            'miller',
+            'offset_box')
+
         self.int_keys = (
             'end_frame',
             'mode_index',
             'n_frames',
             'start_frame')
 
-        self.tuple_keys = (
-            'offset_box',
+        self.int_tuple_keys = (
             'supercell')
 
     def get(self, key, fallback):
@@ -124,9 +127,13 @@ class Opts(object):
                 return self.config.getfloat('general', key)
             elif key in self.int_keys:
                 return self.config.getint('general', key)
-            elif key in self.tuple_keys:
+            elif key in self.float_tuple_keys:
                 return tuple(map(float,
-                                 self.config.get('general, key').split()
+                                 self.config.get('general', key).split()
+                                 ))
+            elif key in self.int_tuple_keys:
+                return tuple(map(int,
+                                 self.config.get('general', key).split()
                                  ))
         else:
             return fallback
