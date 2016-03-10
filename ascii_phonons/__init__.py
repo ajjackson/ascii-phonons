@@ -3,6 +3,7 @@ from subprocess import call
 import tempfile
 import re
 import platform
+from json import loads
 
 try:
     import configparser
@@ -322,3 +323,25 @@ def _qpt_regex_iter(ascii_file):
     with open(ascii_file, 'r') as f:
         for line in f:
             yield re.search('(?<=#metaData: qpt=\[).*(?= \\\\)', line)
+
+def parse_tuple(tuple_string, value_type=float):
+    """Get a tuple back from string representation
+
+    Three representations are recognised:
+    '[1,2,3]' : JSON-style
+    '1 2 3' : Simple space-separated
+    '1,2,3': Simple comma-separated
+
+    :param tuple_string: Serialised tuple
+    :type tuple_string: str
+    :param value_type: Type to cast values to
+    :type value_type: type
+    """
+    if '[' in tuple_string:
+        return tuple(map(value_type, loads(tuple_string)))
+    elif ',' in tuple_string:
+        return tuple(map(value_type,
+                         tuple_string.split(',')))
+    else:
+        return tuple(map(value_type,
+                         tuple_string.split()))

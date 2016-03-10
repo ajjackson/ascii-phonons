@@ -10,6 +10,7 @@
 
 import os
 import configparser
+from json import loads
 
 bl_info = {
     "name": "ascii phonons",
@@ -48,6 +49,30 @@ def read_config(user_config=''):
         config.read(user_config)
 
     return config
+
+
+def parse_tuple(tuple_string, value_type=float):
+    """Get a tuple back from string representation
+
+    Three representations are recognised:
+    '[1,2,3]' : JSON-style
+    '1 2 3' : Simple space-separated
+    '1,2,3': Simple comma-separated
+
+    :param tuple_string: Serialised tuple
+    :type tuple_string: str
+    :param value_type: Type to cast values to
+    :type value_type: type
+    """
+    if '[' in tuple_string:
+        return tuple(map(value_type, loads(tuple_string)))
+    elif ',' in tuple_string:
+        return tuple(map(value_type,
+                         tuple_string.split(',')))
+    else:
+        return tuple(map(value_type,
+                         tuple_string.split()))
+
 
 class Opts(object):
     def __init__(self, options, parser=False):
@@ -128,12 +153,12 @@ class Opts(object):
             elif key in self.int_keys:
                 return self.config.getint('general', key)
             elif key in self.float_tuple_keys:
-                return tuple(map(float,
-                                 self.config.get('general', key).split()
-                                 ))
+                return parse_tuple(self.config.get('general', key))
             elif key in self.int_tuple_keys:
-                return tuple(map(int,
-                                 self.config.get('general', key).split()
-                                 ))
+                return parse_tuple(self.config.get('general', key),
+                                   value_type=int)
+            else:
+                return self.config.get('general', key)
         else:
             return fallback
+

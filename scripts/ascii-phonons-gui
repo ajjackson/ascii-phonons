@@ -15,9 +15,11 @@ import ascii_phonons
 if sys.version_info.major > 2:
     import tkinter as tk
     import tkinter.filedialog as filedialog
+    import configparser
 else:
     import Tkinter as tk
     import tkFileDialog as filedialog
+    import ConfigParser as configparser
 
 from PIL import ImageTk
 from json import dumps
@@ -50,6 +52,8 @@ class Application(tk.Frame):
         self.LeftFrame = tk.Frame(self.LeftRightFrames)
         self.RightFrame = tk.Frame(self.LeftRightFrames)
 
+        self.add_menu(root)
+
         self.add_fileopen_row()
 
         self.add_cell_settings()
@@ -69,6 +73,18 @@ class Application(tk.Frame):
         self.RightFrame.pack(side="right")
 
         self.pack(side=tk.TOP, expand="yes", fill="both")
+
+    def add_menu(self, root):
+        menubar = tk.Menu(self)
+        filemenu = tk.Menu(menubar, tearoff=0)
+        filemenu.add_command(label="Read config", command=self.find_and_read_conf)
+        filemenu.add_command(label="Write config", command=self.find_and_write_conf)
+        filemenu.add_command(label="Reset config", command=self.initialise_conf)
+        menubar.add_cascade(label="File", menu=filemenu)
+        root.config(menu=menubar)
+
+    def hello(self):
+        print("Hello!")
 
     def add_fileopen_row(self):
         self.mode = tk.IntVar(value=0)
@@ -184,20 +200,37 @@ class Application(tk.Frame):
                                                      filetypes=[('all files','.*'),
                                                                 ('v_sim','.ascii')])
 
+
     def askoutputfilename(self):
         """Set the output file path and root with a native system dialogue"""
         output_file = filedialog.asksaveasfilename()
         self.output_file.set(output_file)
+
 
     def initialise_conf(self):        
         self.conf = configparser.ConfigParser()
         self.conf.optionxform = lambda option: option.capitalize()
         self.conf.add_section('general')
 
+
+    def find_and_write_conf(self):
+        output_file = filedialog.asksaveasfilename()
+        self.write_conf(output_file)
+
+
     def write_conf(self, filename):
         self.update_conf()
         with open(filename, 'w') as f:
             self.conf.write(f)
+
+    def find_and_read_conf(self):
+        input_file = filedialog.askopenfilename()
+        self.read_conf(input_file)
+
+    def read_conf(self, filename):
+        self.update_conf()
+        self.conf.read(filename)
+        self.update_view()
 
     def update_conf(self):
         for k, v in {
@@ -219,12 +252,54 @@ class Application(tk.Frame):
             'supercell': (self.supercell_X.get(),self.supercell_Y.get(),self.supercell_Z.get()),
             'vectors': self.arrows.get(),
             'zoom': self.zoom.get()
-            }.iteritems():
+            }.items():
             if type(v) == str:
                 self.conf.set('general', k, v)
+                print('setting {0}: {1}'.format(k, v))
             else:
                 self.conf.set('general', k, dumps(v))
 
+    def update_view(self):
+        """Update the GUI values to reflect state of config object"""
+        for k, v, t in (
+            ('input_file', self.input_file, str),
+            ('mode_index', self.mode, int),
+            ('camera_rot', self.camera_rot, float),
+            ('end_frame', self.end_frame, int),
+            ('gif', self.gif, bool),
+            ('miller', (self.miller_a, self.miller_b, self.miller_c), float),
+            ('montage', self.montage, bool),
+            ('n_frames', self.n_frames, int),
+            ('offset_box', (self.unitcell_X, self.unitcell_Y, self.unitcell_Z), float),
+            ('output_file', self.output_file, str),
+            ('scale_arrow', self.arrowsize, float),
+            ('scale_atom', self.atomsize, float),
+            ('scale_vib', self.vibsize, float),
+            ('show_box', self.show_box, bool),
+            ('start_frame', self.start_frame, int),
+            ('supercell', (self.supercell_X, self.supercell_Y, self.supercell_Z), int),
+            ('vectors', self.arrows, bool),
+            ('zoom', self.zoom, float)):
+            if self.conf.has_option('general', k):
+                if type(v) == tuple:
+                    values = ascii_phonons.parse_tuple(self.conf.get('general', k),
+                                                       value_type=t)
+                    for var, value in zip(v, values):
+                        if sys.version_info.major > 2:
+                            var = value
+                        else:
+                            var.set(value)
+                elif t == bool:
+                    if sys.version_info.major > 2:
+                        v = self.conf.getboolean('general', k)
+                    else:
+                        v.set(self.conf.getboolean('general', k))
+                else:
+                    if sys.version_info.major > 2:
+                        v = t(self.conf.get('general', k))
+                    else:
+                        v.set(t(self.conf.get('general', k)))
+                    print('Updated {0} to {1}'.format(k, v))
 
     def render(self):
         self.update_conf()
@@ -247,8 +322,8 @@ class Application(tk.Frame):
         self.update_conf()
         self.write_conf(self.tmp_conf_file)                
         ascii_phonons.call_blender(config=self.tmp_conf_file, preview=self.preview_file,
-                                   gif=False)
-        remove(self.tmp_conf_file)
+                                   gif=False, static=True)
+        # remove(self.tmp_conf_file)
         
         # Pack the preview image into the right frame
         self.preview_pil = ImageTk.Image.open(self.preview_file + '.png')
