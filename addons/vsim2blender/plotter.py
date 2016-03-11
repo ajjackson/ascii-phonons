@@ -469,7 +469,6 @@ def setup_render_freestyle(**options):
     """
 
     opts = vsim2blender.Opts(options)
-    print(list(opts.config['general'].items()))
     start_frame = opts.get('start_frame', 0)
     n_frames = opts.get('n_frames', 30)
 

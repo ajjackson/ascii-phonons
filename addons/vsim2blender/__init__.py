@@ -109,7 +109,8 @@ class Opts(object):
             'gui',
             'montage',
             'show_box',
-            'static')
+            'static',
+            'vectors')
 
         self.float_keys = (
             'box_thickness',

@@ -36,7 +36,6 @@ class Application(tk.Frame):
         self.output_file = tk.StringVar(value='phonon')
         _, self.preview_file = tempfile.mkstemp(dir=tempfile.gettempdir())
         _, self.tmp_conf_file = tempfile.mkstemp(dir=tempfile.gettempdir())
-        print(self.tmp_conf_file)
 
         self.initialise_conf()
 
@@ -82,9 +81,6 @@ class Application(tk.Frame):
         filemenu.add_command(label="Reset config", command=self.initialise_conf)
         menubar.add_cascade(label="File", menu=filemenu)
         root.config(menu=menubar)
-
-    def hello(self):
-        print("Hello!")
 
     def add_fileopen_row(self):
         self.mode = tk.IntVar(value=0)
@@ -216,6 +212,7 @@ class Application(tk.Frame):
     def find_and_write_conf(self):
         output_file = filedialog.asksaveasfilename()
         self.write_conf(output_file)
+        self.message.set('Saved config to {0}'.format(output_file))
 
 
     def write_conf(self, filename):
@@ -226,6 +223,7 @@ class Application(tk.Frame):
     def find_and_read_conf(self):
         input_file = filedialog.askopenfilename()
         self.read_conf(input_file)
+        self.message.set('Loaded config from {0}'.format(input_file))
 
     def read_conf(self, filename):
         self.update_conf()
@@ -239,100 +237,109 @@ class Application(tk.Frame):
             'camera_rot': self.camera_rot.get(),
             'end_frame': self.end_frame.get(),
             'gif': self.gif.get(),
-            'miller': (self.miller_a.get(), self.miller_b.get(), self.miller_c.get()),
+            'miller': (self.miller_a.get(), self.miller_b.get(),
+                       self.miller_c.get()),
             'montage': self.montage.get(),
             'n_frames': self.n_frames.get(),
-            'offset_box': (self.unitcell_X.get(),self.unitcell_Y.get(),self.unitcell_Z.get()),
+            'offset_box': (self.unitcell_X.get(), self.unitcell_Y.get(),
+                           self.unitcell_Z.get()),
             'output_file': self.output_file.get(),
             'scale_arrow': self.arrowsize.get(),
             'scale_atom': self.atomsize.get(),
             'scale_vib': self.vibsize.get(),
             'show_box': self.show_box.get(),
             'start_frame': self.start_frame.get(),
-            'supercell': (self.supercell_X.get(),self.supercell_Y.get(),self.supercell_Z.get()),
+            'supercell': (self.supercell_X.get(), self.supercell_Y.get(),
+                          self.supercell_Z.get()),
             'vectors': self.arrows.get(),
             'zoom': self.zoom.get()
             }.items():
             if type(v) == str:
                 self.conf.set('general', k, v)
-                print('setting {0}: {1}'.format(k, v))
             else:
                 self.conf.set('general', k, dumps(v))
 
     def update_view(self):
         """Update the GUI values to reflect state of config object"""
-        for k, v, t in (
-            ('input_file', self.input_file, str),
-            ('mode_index', self.mode, int),
-            ('camera_rot', self.camera_rot, float),
-            ('end_frame', self.end_frame, int),
-            ('gif', self.gif, bool),
-            ('miller', (self.miller_a, self.miller_b, self.miller_c), float),
-            ('montage', self.montage, bool),
-            ('n_frames', self.n_frames, int),
-            ('offset_box', (self.unitcell_X, self.unitcell_Y, self.unitcell_Z), float),
-            ('output_file', self.output_file, str),
-            ('scale_arrow', self.arrowsize, float),
-            ('scale_atom', self.atomsize, float),
-            ('scale_vib', self.vibsize, float),
-            ('show_box', self.show_box, bool),
-            ('start_frame', self.start_frame, int),
-            ('supercell', (self.supercell_X, self.supercell_Y, self.supercell_Z), int),
-            ('vectors', self.arrows, bool),
-            ('zoom', self.zoom, float)):
+        if self.conf.has_option('general', 'input_file'):
+            self.input_file = self.conf.get('general', 'input_file')
+        for k, setter, t in (
+            ('mode_index', self.mode.set, int),
+            ('camera_rot', self.camera_rot.set, float),
+            ('end_frame', self.end_frame.set, int),
+            ('gif', self.gif.set, bool),
+            ('miller', (self.miller_a.set, self.miller_b.set,
+                        self.miller_c.set), float),
+            ('montage', self.montage.set, bool),
+            ('n_frames', self.n_frames.set, int),
+            ('offset_box', (self.unitcell_X.set, self.unitcell_Y.set,
+                            self.unitcell_Z.set), float),
+            ('output_file', self.output_file.set, str),
+            ('scale_arrow', self.arrowsize.set, float),
+            ('scale_atom', self.atomsize.set, float),
+            ('scale_vib', self.vibsize.set, float),
+            ('show_box', self.show_box.set, bool),
+            ('start_frame', self.start_frame.set, int),
+            ('supercell', (self.supercell_X.set, self.supercell_Y.set,
+                           self.supercell_Z.set), int),
+            ('vectors', self.arrows.set, bool),
+            ('zoom', self.zoom.set, float)):
             if self.conf.has_option('general', k):
-                if type(v) == tuple:
+                if type(setter) == tuple:
                     values = ascii_phonons.parse_tuple(self.conf.get('general', k),
                                                        value_type=t)
-                    for var, value in zip(v, values):
-                        if sys.version_info.major > 2:
-                            var = value
-                        else:
-                            var.set(value)
+                    for s, value in zip(setter, values):
+                        s(value)
+
                 elif t == bool:
-                    if sys.version_info.major > 2:
-                        v = self.conf.getboolean('general', k)
-                    else:
-                        v.set(self.conf.getboolean('general', k))
+                    setter(self.conf.getboolean('general', k))
+
                 else:
-                    if sys.version_info.major > 2:
-                        v = t(self.conf.get('general', k))
-                    else:
-                        v.set(t(self.conf.get('general', k)))
-                    print('Updated {0} to {1}'.format(k, v))
+                    setter(t(self.conf.get('general', k)))
 
     def render(self):
         self.update_conf()
         self.conf.set('general', 'gui', False)
-        self.write_conf(self.tmp_conf_file)        
-        if self.input_file == '' or isdir(self.input_file):
+        self.write_conf(self.tmp_conf_file)
+        if (not self.conf.has_option('general','input_file')
+            or self.conf.get('general','input_file') == ''):
             self.message.set('Please open a .ascii input file')
         else:
-            if self.conf.has_option('general', 'montage') and self.conf.getboolean('general', 'montage'):
-                if self.conf.getint('general', 'start_frame') == self.conf.getint('general', 'end_frame'):
-                    ascii_phonons.montage_static(config=self.tmp_conf_file, output_file=self.output_file)
+            if (self.conf.has_option('general', 'montage') and
+                self.conf.getboolean('general', 'montage')):
+                if (self.conf.getint('general', 'start_frame')
+                    == self.conf.getint('general', 'end_frame')):
+                    ascii_phonons.montage_static(config=self.tmp_conf_file,
+                                                 output_file=self.output_file)
                 else:
-                    ascii_phonons.montage_anim(config=self.tmp_conf_file, output_file=self.output_file)
+                    ascii_phonons.montage_anim(config=self.tmp_conf_file,
+                                               output_file=self.output_file)
             else:
-                ascii_phonons.call_blender(config=self.tmp_conf_file, gui=False)
+                ascii_phonons.call_blender(config=self.tmp_conf_file,
+                                           gui=False)
             self.message.set('Rendering complete')
         remove(self.tmp_conf_file)
 
     def preview(self):
         self.update_conf()
-        self.write_conf(self.tmp_conf_file)                
-        ascii_phonons.call_blender(config=self.tmp_conf_file, preview=self.preview_file,
-                                   gif=False, static=True)
-        # remove(self.tmp_conf_file)
-        
-        # Pack the preview image into the right frame
-        self.preview_pil = ImageTk.Image.open(self.preview_file + '.png')
-        self.preview_tk = ImageTk.PhotoImage(self.preview_pil)
-        self.preview_label.configure(image=self.preview_tk)
+        self.write_conf(self.tmp_conf_file)
+        if (not self.conf.has_option('general','input_file')
+            or self.conf.get('general','input_file') == ''):
+            self.message.set('Please open a .ascii input file')
+        else:
+            ascii_phonons.call_blender(config=self.tmp_conf_file,
+                                       preview=self.preview_file,
+                                       gif=False, static=True)
+            remove(self.tmp_conf_file)
 
-        remove(self.preview_file + '.png')
-        
-        self.message.set('Preview complete')
+            # Pack the preview image into the right frame
+            self.preview_pil = ImageTk.Image.open(self.preview_file + '.png')
+            self.preview_tk = ImageTk.PhotoImage(self.preview_pil)
+            self.preview_label.configure(image=self.preview_tk)
+
+            remove(self.preview_file + '.png')
+
+            self.message.set('Preview complete')
 
     def launch_blender(self):
         self.update_conf()
