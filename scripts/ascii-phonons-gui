@@ -3,7 +3,7 @@
 from __future__ import print_function
 
 import sys
-from os.path import isdir, join, dirname, abspath
+from os.path import join, dirname, abspath
 from os import remove
 import tempfile
 
@@ -24,7 +24,8 @@ else:
 from PIL import ImageTk
 from json import dumps
 
-preview_placeholder = join(ascii_phonons.ascii_phonons_path, 'images', 'preview.png')
+preview_placeholder = join(ascii_phonons.ascii_phonons_path,
+                           'images', 'preview.png')
 
 class Application(tk.Frame):
 
@@ -64,7 +65,7 @@ class Application(tk.Frame):
         self.add_montage_row()
 
         self.add_render_row()
-        
+
         self.add_preview_panel()
 
         self.LeftRightFrames.pack(side="top", expand="yes", fill="x")
@@ -89,7 +90,7 @@ class Application(tk.Frame):
                   command=self.askinputfilename).pack(side="left", **self.button_defaults)
         tk.Entry(FileopenRow, textvariable=self.mode, width=2).pack(side="right")
         tk.Label(FileopenRow, text='Phonon mode index:').pack(side="right")
-        FileopenRow.pack(side="top")        
+        FileopenRow.pack(side="top")
 
     def add_cell_settings(self):
 
@@ -97,9 +98,9 @@ class Application(tk.Frame):
         self.supercell_Y = tk.IntVar(value=2)
         self.supercell_Z = tk.IntVar(value=2)
         self.miller_a = tk.DoubleVar(value=0)
-        self.miller_b = tk.DoubleVar(value=1)        
+        self.miller_b = tk.DoubleVar(value=1)
         self.miller_c = tk.DoubleVar(value=0)
-        
+
         self.unitcell_X = tk.DoubleVar(value=0.0)
         self.unitcell_Y = tk.DoubleVar(value=0.0)
         self.unitcell_Z = tk.DoubleVar(value=0.0)
@@ -114,13 +115,13 @@ class Application(tk.Frame):
             tk.Entry(SupercellRow, textvariable=field, width=3).pack(side="right")
         tk.Label(SupercellRow, text="Miller indices:").pack(side="right")
         SupercellRow.pack(side="top", expand="yes", fill="x")
-        
+
         UnitcellRow = tk.Frame(self.LeftFrame)
-        tk.Label(UnitcellRow, text='Bounding box location', width=24, justify="right").pack(side="left")        
+        tk.Label(UnitcellRow, text='Bounding box location', width=24, justify="right").pack(side="left")
         for field in self.unitcell_X, self.unitcell_Y, self.unitcell_Z:
             tk.Entry(UnitcellRow, textvariable=field, width=3).pack(side="left")
         tk.Checkbutton(UnitcellRow, text="Show box", variable=self.show_box).pack(side="right")
-        UnitcellRow.pack(side="top", expand="yes", fill="x")            
+        UnitcellRow.pack(side="top", expand="yes", fill="x")
 
 
     def add_appearance_row(self, padding=20):
@@ -130,15 +131,15 @@ class Application(tk.Frame):
         self.vibsize =  tk.DoubleVar(value=1.0)
         self.camera_rot = tk.DoubleVar(value=360)
         self.zoom = tk.DoubleVar(value=1.)
-        
+
         Appearance = tk.Frame(self.LeftFrame, borderwidth=3, relief="groove")
         tk.Label(Appearance, text="Appearance settings").pack(side="top", fill="x")
 
         AppearanceRow1 = tk.Frame(Appearance)
-        tk.Entry(AppearanceRow1, textvariable=self.camera_rot, width=4).pack(side="right")        
+        tk.Entry(AppearanceRow1, textvariable=self.camera_rot, width=4).pack(side="right")
         tk.Label(AppearanceRow1, text="Rotate:").pack(side="right")
-        tk.Entry(AppearanceRow1, textvariable=self.zoom, width=3).pack(side="right")        
-        tk.Label(AppearanceRow1, text="Zoom:").pack(side="right")                
+        tk.Entry(AppearanceRow1, textvariable=self.zoom, width=3).pack(side="right")
+        tk.Label(AppearanceRow1, text="Zoom:").pack(side="right")
         tk.Checkbutton(AppearanceRow1, text="Show arrows", variable=self.arrows).pack(side="left")
         AppearanceRow1.pack(side="top", fill="x", expand="yes")
 
@@ -162,7 +163,7 @@ class Application(tk.Frame):
         self.end_frame = tk.IntVar(value=29)
         self.n_frames = tk.IntVar(value=30)
         self.gif = tk.BooleanVar(value=True)
-        
+
         FrameRow = tk.Frame(self.LeftFrame)
         tk.Label(FrameRow, text='Frame range').pack(side="left")
         tk.Entry(FrameRow, textvariable=self.start_frame, width=3).pack(side="left")
@@ -183,19 +184,18 @@ class Application(tk.Frame):
 
     def add_preview_panel(self):
         # Setup preview panel
-        self.preview_label = tk.Label(self.RightFrame)        
+        self.preview_label = tk.Label(self.RightFrame)
         self.preview_placeholder_pil = ImageTk.Image.open(preview_placeholder)
         self.preview_placeholder_tk = ImageTk.PhotoImage(self.preview_placeholder_pil)
-        self.preview_label.configure(image=self.preview_placeholder_tk)        
+        self.preview_label.configure(image=self.preview_placeholder_tk)
         self.preview_label.pack(padx=10)
-                
+
 
     def askinputfilename(self):
         """Set the input .ASCII file with a native system dialogue"""
         self.input_file = filedialog.askopenfilename(defaultextension='.ascii',
-                                                     filetypes=[('all files','.*'),
-                                                                ('v_sim','.ascii')])
-
+                                                     filetypes=(('All files', '*'),
+                                                                ('v_sim','*.ascii')))
 
     def askoutputfilename(self):
         """Set the output file path and root with a native system dialogue"""
@@ -203,17 +203,19 @@ class Application(tk.Frame):
         self.output_file.set(output_file)
 
 
-    def initialise_conf(self):        
+    def initialise_conf(self):
         self.conf = configparser.ConfigParser()
         self.conf.optionxform = lambda option: option.capitalize()
         self.conf.add_section('general')
 
+    conf_types = [('ascii-phonons configuration', '.conf'),
+                  ('all files', '.*')]
 
     def find_and_write_conf(self):
-        output_file = filedialog.asksaveasfilename()
+        output_file = filedialog.asksaveasfilename(defaultextension='.conf',
+                                                   filetypes=self.conf_types)
         self.write_conf(output_file)
         self.message.set('Saved config to {0}'.format(output_file))
-
 
     def write_conf(self, filename):
         self.update_conf()
@@ -221,7 +223,8 @@ class Application(tk.Frame):
             self.conf.write(f)
 
     def find_and_read_conf(self):
-        input_file = filedialog.askopenfilename()
+        input_file = filedialog.askopenfilename(defaultextension='.conf',
+                                                filetypes=self.conf_types)
         self.read_conf(input_file)
         self.message.set('Loaded config from {0}'.format(input_file))
 
@@ -347,7 +350,7 @@ class Application(tk.Frame):
         ascii_phonons.call_blender(config=self.tmp_conf_file,
                                    output_file=False, gui=True)
         remove(self.tmp_conf_file)
-                
+
 if __name__ == "__main__":
     root = tk.Tk()
     root.wm_title("ascii-phonons")

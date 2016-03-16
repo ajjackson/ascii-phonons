@@ -4,9 +4,12 @@ Configuration files
 
 Plain-text configuration files are used to provide supporting data and allow per-user tweaking.
 In addition to the provided files **settings.conf** and **elements.conf**, which are found in the ``addons/vsim2blender`` folder of the project, the user can maintain their own configuration file in this format. When this file is provided via the ``--config`` flag of the :ref:`CLI` or using the :func:`vsim2blender.read_config` function of the Python library, user settings will take precedent over the defaults.
+Configuration files can also be loaded in the GUI; this allows multiple config files to be "layered",
+and the parameters discovered through a GUI session may be exported for re-use by the GUI, CLI or Python interface.
 
-The format of this files is a typical plain text .ini format and is implemented with `configparser <https://docs.python.org/3.5/library/configparser.html>`_.
-Parameters are grouped into *sections* with a header in square brackets; the parameters themselves are separated from their values with ``=`` or ``:`` markers
+The format of these files is a typical plain text .ini-style format and is implemented with `configparser <https://docs.python.org/3.5/library/configparser.html>`_.
+Conventionally the file extension is .conf, but this is not enforced.
+Parameters are grouped into *sections* with a header in square brackets; the parameters themselves are separated from their values with ``=`` or ``:`` markers.
 
 ::
 
@@ -18,7 +21,8 @@ Parameters are grouped into *sections* with a header in square brackets; the par
    # And comments are indicated with a '#'
    ; or a ';'
 
-Parameters and section headers are *case-sensitive*, and are lower-case except for the names of elements, which follow their usual capitalisation rule.
+Section headers are *case-sensitive*, and are all lower-case.
+Options are not case-sensitive.
 
 Settings
 --------
