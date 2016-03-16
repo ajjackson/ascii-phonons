@@ -156,7 +156,7 @@ class Application(tk.Frame):
     def add_montage_row(self):
         self.montage = tk.BooleanVar(value=False)
         tk.Checkbutton(self.LeftFrame, text="Show all modes as montage",
-                           variable=self.montage).pack(side="top", fill="x")
+                           variable=self.montage).pack(side="top")
 
     def add_frame_row(self):
         self.start_frame = tk.IntVar(value=0)
