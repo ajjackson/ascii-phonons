@@ -302,7 +302,7 @@ class Application(tk.Frame):
 
     def render(self):
         self.update_conf()
-        self.conf.set('general', 'gui', False)
+        self.conf.set('general', 'gui', 'False')
         self.write_conf(self.tmp_conf_file)
         if (not self.conf.has_option('general','input_file')
             or self.conf.get('general','input_file') == ''):
@@ -313,10 +313,10 @@ class Application(tk.Frame):
                 if (self.conf.getint('general', 'start_frame')
                     == self.conf.getint('general', 'end_frame')):
                     ascii_phonons.montage_static(config=self.tmp_conf_file,
-                                                 output_file=self.output_file)
+                                                 output_file=self.output_file.get())
                 else:
                     ascii_phonons.montage_anim(config=self.tmp_conf_file,
-                                               output_file=self.output_file)
+                                               output_file=self.output_file.get())
             else:
                 ascii_phonons.call_blender(config=self.tmp_conf_file,
                                            gui=False)
