@@ -57,8 +57,12 @@ The list of accepted arguments may also be viewed by calling with the "help" arg
 | ``-v``, ``--vectors``             | Show eigenvectors with                   |
 |                                   | static arrows.                           |
 +-----------------------------------+------------------------------------------+
-| ``--scale_factor X.Y``            | Floating-point scale factor for atom     |
-|                                   | size. 1.0 = covalent radius              |
+| ``--scale_factor X.Y``            |Floating-point scale factor for atom      |
+|                                   |size. 1.0 = covalent radius.  It is       |
+|                                   |recommended to reduce this value when     |
+|                                   |visualising with arrows, in order to      |
+|                                   |prevent arrows from being hidden inside   |
+|                                   |atoms.                                    |
 +-----------------------------------+------------------------------------------+
 | ``--vib_magnitude X.Y``           |Floating-point scale factor applied to    |
 |                                   |displacements. The default value of 3 was |
@@ -66,9 +70,7 @@ The list of accepted arguments may also be viewed by calling with the "help" arg
 |                                   |be adjusted for different systems.        |
 +-----------------------------------+------------------------------------------+
 | ``--arrow-magnitude X.Y``         | Floating-point scale factor applied to   |
-|                                   | arrows created with the -v flag. If this |
-|                                   | value is too small, arrows may be hidden |
-|                                   | inside their atoms!                      |
+|                                   | arrows created with the -v flag.         |
 +-----------------------------------+------------------------------------------+
 | ``--no_box``                      | Hide the unit cell bounding box.         |
 |                                   |                                          |

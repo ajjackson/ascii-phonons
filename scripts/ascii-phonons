@@ -53,9 +53,12 @@ if __name__ == "__main__":
     parser.add_argument("--start_frame", type=int,
                         help="Starting frame number for the animation")
     parser.add_argument("--scale_arrow", type=float,
-                        help="Normalised magnitude of static arrows")
+                        help="Scale factor for static arrows; 1.0 corresponds"
+                        " to about 2 angstroms.")
     parser.add_argument("--scale_atom", type=float,
-                        help="Size of atoms, relative to covalent radius")
+                        help="Size of atoms, relative to covalent radius. It "
+                        "is recommended to reduce this value to less than 0.5"
+                        "when using the --vectors flag.")
     parser.add_argument("--scale_vib", type=float,
                         help="Normalised magnitude of animated phonons")
     parser.add_argument("-s", "--static", action="store_true",

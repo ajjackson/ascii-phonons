@@ -249,7 +249,7 @@ def vector_with_phase(atom, qpt, d_vector):
     :type magnitude: float
     """
     r = atom.location
-    exponent = cmath.exp(complex(0, 1) * (r.dot(qpt) - 0.25 * math.pi))
+    exponent = cmath.exp(complex(0, 1) * r.dot(qpt))
     arrow_end = r + Vector(map((lambda y: (y.real)),
                                [x * exponent for x in d_vector]))
     return arrow_end - r
@@ -386,7 +386,12 @@ def open_mode(**options):
                 loc = absolute_position(position,
                                         lattice_vectors=lattice_vectors,
                                         cell_id=cell_id)
+                # Arrows are scaled by eigenvector magnitude
+                # and multiplied by N to account for normalisation.
+                # The value 2 has units of angstrom, giving arrows
+                # that *usually* don't touch neighboring atoms
                 scale = (arrow_vector.length *
+                         len(positions) * 2. *
                          opts.get('scale_arrow', 1.))
                 add_arrow(loc=loc,
                           mass=mass,
