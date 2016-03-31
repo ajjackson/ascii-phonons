@@ -127,6 +127,7 @@ class Application(tk.Frame):
     def add_appearance_row(self, padding=20):
         self.arrows = tk.BooleanVar(value=False)
         self.arrowsize = tk.DoubleVar(value=20.0)
+        self.orthographic = tk.BooleanVar(value=False)
         self.atomsize =  tk.DoubleVar(value=0.6)
         self.vibsize =  tk.DoubleVar(value=1.0)
         self.camera_rot = tk.DoubleVar(value=360)
@@ -134,13 +135,14 @@ class Application(tk.Frame):
 
         Appearance = tk.Frame(self.LeftFrame, borderwidth=3, relief="groove")
         tk.Label(Appearance, text="Appearance settings").pack(side="top", fill="x")
+        tk.Checkbutton(Appearance, text="Show arrows", variable=self.arrows).pack(side="top")        
 
         AppearanceRow1 = tk.Frame(Appearance)
         tk.Entry(AppearanceRow1, textvariable=self.camera_rot, width=4).pack(side="right")
         tk.Label(AppearanceRow1, text="Rotate:").pack(side="right")
         tk.Entry(AppearanceRow1, textvariable=self.zoom, width=3).pack(side="right")
         tk.Label(AppearanceRow1, text="Zoom:").pack(side="right")
-        tk.Checkbutton(AppearanceRow1, text="Show arrows", variable=self.arrows).pack(side="left")
+        tk.Checkbutton(AppearanceRow1, text="Orthographic", variable=self.orthographic).pack(side="left")
         AppearanceRow1.pack(side="top", fill="x", expand="yes")
 
         AppearanceScales = tk.Frame(Appearance)
@@ -246,6 +248,7 @@ class Application(tk.Frame):
             'n_frames': self.n_frames.get(),
             'offset_box': (self.unitcell_X.get(), self.unitcell_Y.get(),
                            self.unitcell_Z.get()),
+            'orthographic': self.orthographic.get(),
             'output_file': self.output_file.get(),
             'scale_arrow': self.arrowsize.get(),
             'scale_atom': self.atomsize.get(),
@@ -278,6 +281,7 @@ class Application(tk.Frame):
             ('offset_box', (self.unitcell_X.set, self.unitcell_Y.set,
                             self.unitcell_Z.set), float),
             ('output_file', self.output_file.set, str),
+            ('orthographic', self.orthographic.set, bool),
             ('scale_arrow', self.arrowsize.set, float),
             ('scale_atom', self.atomsize.set, float),
             ('scale_vib', self.vibsize.set, float),

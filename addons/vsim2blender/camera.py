@@ -27,6 +27,9 @@ def setup_camera(lattice_vectors, field_of_view=0.5,
             *(3-list of floats cast to str)*
             Miller indices of target view. Floating-point values may
             be used for fine adjustments if desired.
+        orthographic
+            *(bool)*
+            If True, use orthographic projection (no perspective)
         supercell
             *(3-list of ints cast to str)*
             Supercell dimensions
@@ -40,6 +43,7 @@ def setup_camera(lattice_vectors, field_of_view=0.5,
     miller = opts.get('miller', (0, 1, 0))
     supercell = opts.get('supercell', (2, 2, 2))
     zoom = opts.get('zoom', 1.)
+    orthographic = opts.get('orthographic', False)
 
     a, b, c = [n * x for n, x in zip(supercell, lattice_vectors)]
     supercell_centre = 0.5 * sum([a, b, c], Vector((0., 0., 0.)))
@@ -73,7 +77,11 @@ def setup_camera(lattice_vectors, field_of_view=0.5,
     bpy.ops.object.camera_add(location=camera_position)
     camera = bpy.context.object
     bpy.context.scene.camera = camera
-    bpy.data.cameras[camera.name].angle = field_of_view
+    if orthographic:
+        bpy.data.cameras[camera.name].type = 'ORTHO'
+        bpy.data.cameras[camera.name].ortho_scale = camera_distance/2.5
+    else:
+        bpy.data.cameras[camera.name].angle = field_of_view
     bpy.data.cameras[camera.name].clip_end = 1e8
 
     # Use tracking to point camera at center of structure

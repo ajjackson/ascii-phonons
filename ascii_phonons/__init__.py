@@ -48,6 +48,7 @@ class Opts(object):
             'gif',
             'gui',
             'montage',
+            'orthographic',
             'show_box',
             'static',
             'vectors')

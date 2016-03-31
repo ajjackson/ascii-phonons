@@ -111,3 +111,6 @@ The list of accepted arguments may also be viewed by calling with the "help" arg
 |                                   | construction of the .ascii file, and     |
 |                                   | should not be repeated.                  |
 +-----------------------------------+------------------------------------------+
+| ``--orthographic``                | Use orthographic projection              |
+|                                   | (i.e. no perspective effect)             |
++-----------------------------------+------------------------------------------+
