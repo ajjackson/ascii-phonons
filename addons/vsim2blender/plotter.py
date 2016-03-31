@@ -388,10 +388,8 @@ def open_mode(**options):
                                         cell_id=cell_id)
                 # Arrows are scaled by eigenvector magnitude
                 # and multiplied by N to account for normalisation.
-                # The value 2 has units of angstrom, giving arrows
-                # that *usually* don't touch neighboring atoms
                 scale = (arrow_vector.length *
-                         len(positions) * 2. *
+                         len(positions) *
                          opts.get('scale_arrow', 1.))
                 add_arrow(loc=loc,
                           mass=mass,
