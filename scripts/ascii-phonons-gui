@@ -126,7 +126,7 @@ class Application(tk.Frame):
 
     def add_appearance_row(self, padding=20):
         self.arrows = tk.BooleanVar(value=False)
-        self.arrowsize = tk.DoubleVar(value=20.0)
+        self.arrowsize = tk.DoubleVar(value=1.0)
         self.orthographic = tk.BooleanVar(value=False)
         self.atomsize =  tk.DoubleVar(value=0.6)
         self.vibsize =  tk.DoubleVar(value=1.0)

@@ -397,7 +397,7 @@ def open_mode(**options):
                           scale=scale)
     if vectors:
         col = str2list(opts.config.get('colours', 'arrow',
-                                  fallback='0. 0. 0.'))
+                       fallback='0. 0. 0.'))
         bpy.data.materials['Arrow'].diffuse_color = col
 
     # Position camera and colour world. Note that cameras as objects and
