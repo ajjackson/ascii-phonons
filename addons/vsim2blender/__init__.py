@@ -108,6 +108,7 @@ class Opts(object):
             'gif',
             'gui',
             'montage',
+            'normalise_vectors',
             'orthographic',
             'show_box',
             'static',

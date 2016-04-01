@@ -48,6 +48,7 @@ class Opts(object):
             'gif',
             'gui',
             'montage',
+            'normalise_vectors',
             'orthographic',
             'show_box',
             'static',
@@ -205,6 +206,7 @@ def montage_static(**options):
             options[param] = default
 
     call_args = ['montage', '-font', 'Helvetica', '-pointsize', '18']
+    call_args.extend(opts.get('montage_args', '').split())    
 
     # The output filename is used as the root for temporary images
     # These are requested as "preview" images to reduce rescaling
@@ -261,6 +263,8 @@ def montage_anim(**options):
     for frame in frames:
         montage_call_args = ['montage', '-font', 'Helvetica',
                              '-pointsize', '18']
+        montage_call_args.extend(opts.get('montage_args', '').split())
+            
         for index, label in enumerate(labels):
             montage_call_args.extend(['-label', label,
                                       '.'.join((output_basename,

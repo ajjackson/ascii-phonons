@@ -126,6 +126,7 @@ class Application(tk.Frame):
 
     def add_appearance_row(self, padding=20):
         self.arrows = tk.BooleanVar(value=False)
+        self.normarrows = tk.BooleanVar(value=False)
         self.arrowsize = tk.DoubleVar(value=1.0)
         self.orthographic = tk.BooleanVar(value=False)
         self.atomsize =  tk.DoubleVar(value=0.6)
@@ -135,7 +136,11 @@ class Application(tk.Frame):
 
         Appearance = tk.Frame(self.LeftFrame, borderwidth=3, relief="groove")
         tk.Label(Appearance, text="Appearance settings").pack(side="top", fill="x")
-        tk.Checkbutton(Appearance, text="Show arrows", variable=self.arrows).pack(side="top")        
+
+        AppearanceRow0 = tk.Frame(Appearance)
+        tk.Checkbutton(AppearanceRow0, text="Show arrows", variable=self.arrows).pack(side="left")
+        tk.Checkbutton(AppearanceRow0, text="Normalise arrows", variable=self.normarrows).pack(side="right")
+        AppearanceRow0.pack(side="top", fill="x", expand="yes")
 
         AppearanceRow1 = tk.Frame(Appearance)
         tk.Entry(AppearanceRow1, textvariable=self.camera_rot, width=4).pack(side="right")
@@ -246,6 +251,7 @@ class Application(tk.Frame):
                        self.miller_c.get()),
             'montage': self.montage.get(),
             'n_frames': self.n_frames.get(),
+            'normalise_vectors': self.normarrows.get(),
             'offset_box': (self.unitcell_X.get(), self.unitcell_Y.get(),
                            self.unitcell_Z.get()),
             'orthographic': self.orthographic.get(),
@@ -278,6 +284,7 @@ class Application(tk.Frame):
                         self.miller_c.set), float),
             ('montage', self.montage.set, bool),
             ('n_frames', self.n_frames.set, int),
+            ('normalise_vectors', self.normarrows, bool)
             ('offset_box', (self.unitcell_X.set, self.unitcell_Y.set,
                             self.unitcell_Z.set), float),
             ('output_file', self.output_file.set, str),

@@ -43,8 +43,13 @@ if __name__ == "__main__":
                         help="Miller indices for view")
     parser.add_argument("--montage", action="store_true",
                         help="Create tiled montage with Imagemagick")
+    parser.add_argument("--montage_args", type=str,
+                        help="Additional args for montage command "
+                        "e.g. '-tile {cols}x{rows}'")
     parser.add_argument("--no_box", action="store_true",
                         help="Hide bounding box")
+    parser.add_argument("--normalise_vectors", action="store_true",
+                        help="Normalise max arrow length per mode")
     parser.add_argument("--offset_box", nargs=3, type=float,
                         help="Bounding box position (lattice coordinates)")
     parser.add_argument("-o", "--output_file",

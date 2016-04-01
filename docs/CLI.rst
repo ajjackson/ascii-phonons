@@ -69,8 +69,11 @@ The list of accepted arguments may also be viewed by calling with the "help" arg
 |                                   |selected for Cu2ZnSnS4; this may need to  |
 |                                   |be adjusted for different systems.        |
 +-----------------------------------+------------------------------------------+
-| ``--arrow-magnitude X.Y``         | Floating-point scale factor applied to   |
+| ``--arrow_magnitude X.Y``         | Floating-point scale factor applied to   |
 |                                   | arrows created with the -v flag.         |
++-----------------------------------+------------------------------------------+
+| ``--normalise_vectors``           | Rescale arrows such that the maximum for |
+|                                   | each mode is a fixed length.             |
 +-----------------------------------+------------------------------------------+
 | ``--no_box``                      | Hide the unit cell bounding box.         |
 |                                   |                                          |
@@ -91,6 +94,10 @@ The list of accepted arguments may also be viewed by calling with the "help" arg
 |                                   |output of all modes. The `-m` flag is     |
 |                                   |ignored. An animated .gif will be output  |
 |                                   |unless ``--static`` is specified.         |
++-----------------------------------+------------------------------------------|
+| ``--montage_args``                | Additional args for montage command e.g. |
+|                                   | ``--montage_args='-tile {cols}x{rows}'`` |
+|                                   | (Note the use of = and single quotes)    |
 +-----------------------------------+------------------------------------------+
 | ``--camera_rot ROT``              | Rotated camera position in degrees.      |
 |                                   |                                          |

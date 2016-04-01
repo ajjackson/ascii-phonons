@@ -11,6 +11,8 @@ def add_arrow(loc=[0,0,0], rot_euler=False, scale=1, mass=1):
     :type loc: 3-tuple or 3-list of floats
     :param rot_euler: Set of euler rotations (about x-, y- then z-axis) in radians. If False, arrow remains pointing along x-axis.
     :type rot_euler: 3-tuple/list or Boolean False
+    :return: Arrow object
+    :rtype: bpy object
     """
     # Check Blender version to account for API change
     if bpy.app.version[0] == 2 and bpy.app.version[1] < 70:
@@ -25,6 +27,7 @@ def add_arrow(loc=[0,0,0], rot_euler=False, scale=1, mass=1):
     scale = scale * mass**-.5  # Inverse square root of mass gives a physical relative size of motions
     arrow.scale = [scale]*3 # Scale uniformly to reflect magnitude
     arrow.name = 'Arrow.{0}'.format(time.time()) # This is a hack to give arrows unique names. There should be a better solution.
+    return arrow
 
 def _norm(*args):
     assert len(args) > 0

@@ -267,7 +267,7 @@ def open_mode(**options):
     :type config: configparser.ConfigParser
     :param do_mass_weighting: Weight eigenvectors by mass.
         This is not usually required.
-    :type do_mass_weighting: boolean
+    :type do_mass_weighting: bool
     :param end_frame: The ending frame number of the rendered Animation
         (default=start_frame+n_frames-1)
     :type end_frame: int or None
@@ -278,11 +278,13 @@ def open_mode(**options):
     :param n_frames: Animation length of a single oscillation
         cycle in frames (default=30)
     :type n_frames: Positive int
+    :param normalise_vectors: Re-scale vectors so largest arrow is fixed length
+    :type normalise_vectors: bool
     :param offset_box: Position of bbox in lattice vector coordinates.
         Default (0,0,0) (Left front bottom)
     :type offset_box: Vector or 3-tuple
     :param preview: Enable preview mode - single frame, smaller render
-    :type preview: boolean
+    :type preview: bool
     :param scale_arrow: Scale factor for arrows
     :type scale_arrow: float
     :param scale_atom: Scale of atoms, relative to covalent radius
@@ -291,17 +293,17 @@ def open_mode(**options):
         (angstroms / normalised eigenvector).
     :type scale_vib: float
     :param show_box: If True, show bounding box
-    :type show_box: Boolean
+    :type show_box: bool
     :param start_frame: The starting frame number of the rendered
         animation (default=0)
     :type start_frame: int or None
     :param static: if True, ignore frame range and use single frame.
         Otherwise, add animation keyframes.
-    :type static: Boolean
+    :type static: bool
     :param supercell: supercell dimensions
     :type supercell: 3-tuple or 3-list of ints
     :param vectors: If True, show arrows
-    :type vectors: Boolean
+    :type vectors: bool
     :param zoom: Camera zoom adjustment
     :type zoom: float
 
@@ -352,6 +354,12 @@ def open_mode(**options):
     mode_index = opts.get('mode_index', 0)
     supercell = (opts.get('supercell', (2, 2, 2)))
     vectors = opts.get('vectors', False)
+
+    normalise_vectors = opts.get('normalise_vectors', False)
+    # Variable for tracking largest arrow
+    max_vector = 0
+    arrow_objects = []
+
     for cell_id_tuple in itertools.product(range(supercell[0]),
                                            range(supercell[1]),
                                            range(supercell[2])):
@@ -383,22 +391,30 @@ def open_mode(**options):
             if vectors:
                 arrow_vector = vector_with_phase(atom, qpt_cartesian,
                                                  displacement_vector)
+                max_vector = max(max_vector, arrow_vector.length)
                 loc = absolute_position(position,
                                         lattice_vectors=lattice_vectors,
                                         cell_id=cell_id)
                 # Arrows are scaled by eigenvector magnitude
-                # and multiplied by N to account for normalisation.
-                scale = (arrow_vector.length *
-                         len(positions) *
-                         opts.get('scale_arrow', 1.))
-                add_arrow(loc=loc,
-                          mass=mass,
-                          rot_euler=vector_to_euler(arrow_vector),
-                          scale=scale)
+                arrow_objects.append(
+                    add_arrow(loc=loc,
+                              mass=mass,
+                              rot_euler=vector_to_euler(arrow_vector),
+                              scale=arrow_vector.length))
     if vectors:
         col = str2list(opts.config.get('colours', 'arrow',
                        fallback='0. 0. 0.'))
         bpy.data.materials['Arrow'].diffuse_color = col
+
+    # Rescaling; either by clamping max or accounting for cell size
+    if vectors and normalise_vectors:
+        scale = opts.get('scale_arrow', 1.) / max_vector
+        for arrow in arrow_objects:
+            arrow.scale *= scale
+    elif vectors:
+        scale = opts.get('scale_arrow', 1.) * len(positions)
+        for arrow in arrow_objects:
+            arrow.scale *= scale
 
     # Position camera and colour world. Note that cameras as objects and
     # cameras as 'cameras' have different attributes, so need to look up
