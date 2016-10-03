@@ -46,6 +46,10 @@ if __name__ == "__main__":
     parser.add_argument("--montage_args", type=str,
                         help="Additional args for montage command "
                         "e.g. '-tile {cols}x{rows}'")
+    parser.add_argument("--ncol", type=int, default=6,
+                        help="Columns in tiled display")
+    parser.add_argument("--nrow", type=int, default=6,
+                        help="Rows per page in tiled display")
     parser.add_argument("--no_box", action="store_true",
                         help="Hide bounding box")
     parser.add_argument("--normalise_vectors", action="store_true",
@@ -70,6 +74,8 @@ if __name__ == "__main__":
                         help="Static image (disable animation)")
     parser.add_argument("-v", "--vectors", action="store_true",
                         help="Indicate eigenvectors with static arrows.")
+    parser.add_argument("--zero", type=str,
+                        help="Symbol for zero-frequency phonons")
     parser.add_argument("--zoom", type=float,
                         help="Camera zoom adjustment")
 

@@ -2,6 +2,7 @@ from os import path, remove
 from subprocess import call
 import tempfile
 import re
+from math import ceil
 import platform
 from json import loads
 
@@ -14,6 +15,8 @@ ascii_phonons_path = path.abspath(path.join(
     path.dirname(path.realpath(__file__)), path.pardir))
 addons_path = path.join(ascii_phonons_path, 'addons')
 
+NCOL_DEFAULT = 6
+NROW_DEFAULT = 6
 
 class Opts(object):
     def __init__(self, options, parser=False):
@@ -197,34 +200,75 @@ vsim2blender.plotter.render(output_file='{out_file}',
 
 
 def montage_static(**options):
-    """Render images for all phonon modes and present as array"""
+    """Render images for all phonon modes and present as array.
+
+
+    Some additional options are supported:
+
+    :param zero: String to display for zero-frequency modes
+    :type zero: str
+
+    :param ncol: Number of columns in montage
+    :param nrow: Maximum number of rows per montage page
+    """
     opts = Opts(options)
     mode_data = list(_qpt_freq_iter(opts.get('input_file', None)))
+
 
     for param, default in (('output_file', 'phonon'),):
         if not opts.get(param, False):
             options[param] = default
 
     call_args = ['montage', '-font', 'Helvetica', '-pointsize', '18']
-    call_args.extend(opts.get('montage_args', '').split())    
+    call_args.extend(opts.get('montage_args', '').split())
 
     # The output filename is used as the root for temporary images
     # These are requested as "preview" images to reduce rescaling
     output_basename = opts.get('output_file', 'phonon')
 
-    for index, (qpt, freq) in enumerate(mode_data):
-        options.update({'preview': '.'.join((output_basename,
-                                                 str(index)))})
-        options.update({'mode_index': index})
-        call_blender(**options)
-        call_args.extend(['-label', _flabelformat(freq),
-                         options['preview'] + '.png'])
-    call_args.append(output_basename + '_montage.png')
+    if len(mode_data) <= (opts.get('ncol', NCOL_DEFAULT) *
+                          opts.get('nrow', NROW_DEFAULT)):
+        filename = output_basename + '.png'
+        _montage_static_batch(mode_data, opts, filename=filename)
+    else:
+        for i, subgroup_data in enumerate(_split_batches(mode_data,
+                                               ncol=opts.get('ncol',
+                                                                 NCOL_DEFAULT),
+                                               nrow=opts.get('nrow',
+                                                                 NROW_DEFAULT)
+                                                       )):
+            filename = '.'.join((output_basename, str(i + 1), 'png'))
+            _montage_static_batch(subgroup_data, opts,
+                                  filename=filename)
 
+def _split_batches(mode_data, ncol=NCOL_DEFAULT, nrow=NROW_DEFAULT):
+    """Divide mode data into batches according to row/column limits"""
+    nmodes = len(mode_data)
+    per_page_max = ncol * nrow
+    pages_needed = ceil(nmodes / float(per_page_max))
+    rows_needed = ceil(nmodes / float(ncol))
+    rows_per_page = ceil(rows_needed / float(pages_needed))
+    modes_per_page = rows_per_page * ncol
+
+    return [mode_data[int(page * modes_per_page):int((page + 1) *
+                                                      modes_per_page)]
+                for page in range(int(pages_needed))]
+
+def _montage_static_batch(mode_data, opts, filename='montage.png'):
+    call_args = ['montage', '-font', 'Helvetica', '-pointsize', '18']
+    for index, (qpt, freq) in enumerate(mode_data):
+        opts.options.update({'preview': '.'.join((filename, str(index)))})
+        opts.options.update({'mode_index': index})
+        call_blender(**opts.options)
+        call_args.extend(['-label',
+                          _flabelformat(freq, zero=opts.get('zero', '')),
+                          opts.get('preview', None) + '.png'])
+    call_args.extend(opts.get('montage_args', '').split())
+    call_args.extend(['-tile', '{0}x'.format(opts.get('ncol', NCOL_DEFAULT))])
+    call_args.append(filename)
     call(call_args)
-
     for index, (qpt, freq) in enumerate(mode_data):
-        remove('.'.join((output_basename, str(index), 'png')))
+        remove('.'.join((filename, str(index), 'png')))
 
 
 def montage_anim(**options):
@@ -253,7 +297,7 @@ def montage_anim(**options):
                                              str(index), ''))})
         options.update({'mode_index': index})
         call_blender(**options)
-        labels.append(_flabelformat(freq))
+        labels.append(_flabelformat(freq, zero=opts.get('zero', '')))
 
     print("Compiling tiled images...")
 
@@ -264,7 +308,7 @@ def montage_anim(**options):
         montage_call_args = ['montage', '-font', 'Helvetica',
                              '-pointsize', '18']
         montage_call_args.extend(opts.get('montage_args', '').split())
-            
+
         for index, label in enumerate(labels):
             montage_call_args.extend(['-label', label,
                                       '.'.join((output_basename,
@@ -303,11 +347,11 @@ def montage_anim(**options):
     print("Done!")
 
 
-def _flabelformat(freq):
+def _flabelformat(freq, zero=' '):
     """Formatted frequency labels"""
     label = '{0:5.2f}'.format(freq)
     if label in (' 0.00', '-0.00'):
-        return ' '
+        return zero
     else:
         return label
 
