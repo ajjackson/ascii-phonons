@@ -99,6 +99,13 @@ The list of accepted arguments may also be viewed by calling with the "help" arg
 |                                   | ``--montage_args='-tile {cols}x{rows}'`` |
 |                                   | (Note the use of = and single quotes)    |
 +-----------------------------------+------------------------------------------+
+| ``--ncol``                        | Columns in tiled display (default = 6).  |
+|                                   | (Not yet implemented for animation.)     |
++-----------------------------------+------------------------------------------|
+| ``--nrow``                        | Rows per page in tiled display           |
+|                                   | (default = 6).                           |
+|                                   | (Not yet implemented for animation.)     |
++-----------------------------------+------------------------------------------+
 | ``--camera_rot ROT``              | Rotated camera position in degrees.      |
 |                                   |                                          |
 |                                   |                                          |
