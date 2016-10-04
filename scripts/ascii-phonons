@@ -12,10 +12,17 @@ import ascii_phonons
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+
     parser.add_argument("input_file",
                         help="Path to input file. ASCII formatted for v_sim.")
-    parser.add_argument("-m", "--mode_index", default=0, type=int,
+    parser.add_argument("-m", "--mode_index", type=int,
                         help="Zero-based position of mode in ASCII file")
+
+    freq_conversion = parser.add_mutually_exclusive_group()
+    freq_conversion.add_argument("--cm_to_thz", action="store_true",
+                        help="Convert phonon frequencies from cm-1 to THz")
+    freq_conversion.add_argument("--thz_to_cm", action="store_true",
+                        help="Convert phonon frequencies from THz to cm-1")
     parser.add_argument("-b", "--blender_bin", help="Path to Blender binary")
     parser.add_argument("--camera_rot", type=float,
                         help="View rotation in degrees")
@@ -46,6 +53,8 @@ if __name__ == "__main__":
     parser.add_argument("--montage_args", type=str,
                         help="Additional args for montage command "
                         "e.g. '-tile {cols}x{rows}'")
+    parser.add_argument("--montage_decimals", type=int,
+                        help="Decimal places for the frequency in montage")
     parser.add_argument("--ncol", type=int,
                         help="Columns in tiled display")
     parser.add_argument("--nrow", type=int,
@@ -79,9 +88,9 @@ if __name__ == "__main__":
     parser.add_argument("--zoom", type=float,
                         help="Camera zoom adjustment")
 
-    # Parse args and convert all non-False/zero/none items to a dictionary
+    # Parse args and convert all non-False/None items to a dictionary
     args = parser.parse_args()
-    options = {k: v for k, v in vars(args).items() if v}
+    options = {k: v for k, v in vars(args).items() if v or type(v) is int}
 
     user_config = args.config
     if user_config == '':

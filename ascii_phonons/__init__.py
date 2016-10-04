@@ -47,6 +47,7 @@ class Opts(object):
             self.config.read(options['config'])
 
         self.bool_keys = (
+            'cm_to_thz',
             'do_mass_weighting',
             'gif',
             'gui',
@@ -55,6 +56,7 @@ class Opts(object):
             'orthographic',
             'show_box',
             'static',
+            'thz_to_cm',
             'vectors')
 
         self.float_keys = (
@@ -69,6 +71,7 @@ class Opts(object):
         self.int_keys = (
             'end_frame',
             'mode_index',
+            'montage_decimals',
             'n_frames',
             'ncol',
             'nrow',
@@ -200,6 +203,16 @@ vsim2blender.plotter.render(output_file='{out_file}',
         for f in tmp_files:
             remove(f)
 
+def _freq_factor(opts):
+    if opts.get('cm_to_thz', None) and opts.get('thz_to_cm', None):
+        raise Exception("Can't set both cm_to_thz and thz_to_cm")
+    if opts.get('cm_to_thz', None):
+        freq_factor = 1./33.35641
+    elif opts.get('thz_to_cm', None):
+        freq_factor = 33.35641
+    else:
+        freq_factor = 1.
+    return freq_factor
 
 def montage_static(**options):
     """Render images for all phonon modes and present as array.
@@ -214,8 +227,8 @@ def montage_static(**options):
     :param nrow: Maximum number of rows per montage page
     """
     opts = Opts(options)
-    mode_data = list(_qpt_freq_iter(opts.get('input_file', None)))
-
+    mode_data = list(_qpt_freq_iter(opts.get('input_file', None),
+                                    factor=_freq_factor(opts)))
 
     for param, default in (('output_file', 'phonon'),):
         if not opts.get(param, False):
@@ -285,7 +298,7 @@ def _montage_static_batch(mode_data, opts, mode=0, filename='montage.png'):
         opts.options.update({'mode_index': index + mode})
         call_blender(**opts.options)
         call_args.extend(['-label',
-                          _flabelformat(freq, zero=opts.get('zero', '')),
+                          _flabelformat(freq, opts),
                           opts.get('preview', None) + '.png'])
     call_args.extend(opts.get('montage_args', '').split())
     call_args.extend(['-tile', '{0}x'.format(opts.get('ncol', NCOL_DEFAULT))])
@@ -321,7 +334,7 @@ def montage_anim(**options):
                                              str(index), ''))})
         options.update({'mode_index': index})
         call_blender(**options)
-        labels.append(_flabelformat(freq, zero=opts.get('zero', '')))
+        labels.append(_flabelformat(freq, opts))
 
     print("Compiling tiled images...")
 
@@ -371,20 +384,29 @@ def montage_anim(**options):
     print("Done!")
 
 
-def _flabelformat(freq, zero=' '):
+def _flabelformat(freq, opts):
     """Formatted frequency labels"""
-    label = '{0:5.2f}'.format(freq)
-    if label in (' 0.00', '-0.00'):
+    zero = opts.get('zero', ' ')
+    decimals = opts.get('montage_decimals', 2)
+    label_format = '{{0:5.{decimals}f}}'.format(decimals=decimals)
+    label = label_format.format(freq)
+
+    if abs(freq) < 0.1**decimals:
         return zero
     else:
         return label
 
 
-def _qpt_freq_iter(ascii_file):
-    """Generate tuples of qpt (as list) and frequency"""
+def _qpt_freq_iter(ascii_file, factor=1.):
+    """Generate tuples of qpt (as list) and frequency
+
+    :param ascii_file: File to read
+    :type ascii_file: str
+    :param factor: Conversion factor for frequency
+    :type factor: float"""
     for txtline in _qpt_string_iter(ascii_file):
         listline = [float(x) for x in txtline.split(';')]
-        yield(listline[0:3], listline[3])
+        yield(listline[0:3], listline[3] * factor)
 
 
 def _qpt_string_iter(ascii_file):
