@@ -70,6 +70,8 @@ class Opts(object):
             'end_frame',
             'mode_index',
             'n_frames',
+            'ncol',
+            'nrow',
             'start_frame')
 
         self.tuple_keys = (
@@ -231,34 +233,56 @@ def montage_static(**options):
         filename = output_basename + '.png'
         _montage_static_batch(mode_data, opts, filename=filename)
     else:
-        for i, subgroup_data in enumerate(_split_batches(mode_data,
-                                               ncol=opts.get('ncol',
-                                                                 NCOL_DEFAULT),
-                                               nrow=opts.get('nrow',
-                                                                 NROW_DEFAULT)
-                                                       )):
+        modes_per_page = _modes_per_page(mode_data,
+                                         ncol=opts.get('ncol', NCOL_DEFAULT),
+                                         nrow=opts.get('nrow', NROW_DEFAULT))
+        batches = _split_batches(mode_data, modes_per_page)
+        batch_modes = range(0, len(mode_data), int(modes_per_page))
+
+        for i, (subgroup_data, batch_mode) in enumerate(
+                zip(batches, batch_modes)):
             filename = '.'.join((output_basename, str(i + 1), 'png'))
-            _montage_static_batch(subgroup_data, opts,
+            _montage_static_batch(subgroup_data, opts, mode=batch_mode,
                                   filename=filename)
 
-def _split_batches(mode_data, ncol=NCOL_DEFAULT, nrow=NROW_DEFAULT):
-    """Divide mode data into batches according to row/column limits"""
+def _modes_per_page(mode_data, ncol=NCOL_DEFAULT, nrow=NROW_DEFAULT):
+    """Work out neat number of modes per page for split batches"""
     nmodes = len(mode_data)
     per_page_max = ncol * nrow
     pages_needed = ceil(nmodes / float(per_page_max))
     rows_needed = ceil(nmodes / float(ncol))
     rows_per_page = ceil(rows_needed / float(pages_needed))
     modes_per_page = rows_per_page * ncol
+    return modes_per_page
 
-    return [mode_data[int(page * modes_per_page):int((page + 1) *
-                                                      modes_per_page)]
-                for page in range(int(pages_needed))]
+def _split_batches(mode_data, modes_per_page):
+    """Divide mode data into batches according to row/column limits"""
+    mode = 0
+    while mode < len(mode_data):
+        if mode + modes_per_page >= len(mode_data):
+            yield mode_data[int(mode):]
+        else:
+            yield mode_data[int(mode): int(mode + modes_per_page)]
+        mode += modes_per_page
 
-def _montage_static_batch(mode_data, opts, filename='montage.png'):
+def _montage_static_batch(mode_data, opts, mode=0, filename='montage.png'):
+    """Plot a group of modes as an array
+
+    :param mode_data: list of qpts and frequencies corresponding to modes to
+        plot
+    :type mode_data: List of 2-tuples
+    :param opts: Opts object containing user configuration
+    :type opts: ascii_phonons.Opts
+    :param mode: 0-based index of first mode to plot
+    :type mode: int
+    :param filename: Output filename including extension
+    :type filename: str
+
+    """
     call_args = ['montage', '-font', 'Helvetica', '-pointsize', '18']
     for index, (qpt, freq) in enumerate(mode_data):
         opts.options.update({'preview': '.'.join((filename, str(index)))})
-        opts.options.update({'mode_index': index})
+        opts.options.update({'mode_index': index + mode})
         call_blender(**opts.options)
         call_args.extend(['-label',
                           _flabelformat(freq, zero=opts.get('zero', '')),

@@ -46,9 +46,9 @@ if __name__ == "__main__":
     parser.add_argument("--montage_args", type=str,
                         help="Additional args for montage command "
                         "e.g. '-tile {cols}x{rows}'")
-    parser.add_argument("--ncol", type=int, default=6,
+    parser.add_argument("--ncol", type=int,
                         help="Columns in tiled display")
-    parser.add_argument("--nrow", type=int, default=6,
+    parser.add_argument("--nrow", type=int,
                         help="Rows per page in tiled display")
     parser.add_argument("--no_box", action="store_true",
                         help="Hide bounding box")
