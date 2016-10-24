@@ -177,7 +177,7 @@ vsim2blender.plotter.render(output_file='{out_file}',
                                                                False):
         frames = range(opts.get('start_frame', 0),
                        opts.get('end_frame',
-                                opts.get('n_frames', 30)) + 1)
+                                opts.get('n_frames', 30) - 1) + 1)
         tmp_files = [''.join((output_file,
                               '{0:04.0f}'.format(i),
                               '.png'))
