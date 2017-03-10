@@ -106,7 +106,7 @@ def absolute_position(position, lattice_vectors=[1., 1., 1.],
 
 
 def add_atom(position, lattice_vectors, symbol, cell_id=(0, 0, 0),
-             reduced=False, name=False, config=False):
+             scale_factor=1., reduced=False, name=False, config=False):
     """
     Add atom to scene
 
@@ -129,7 +129,7 @@ def add_atom(position, lattice_vectors, symbol, cell_id=(0, 0, 0),
     :param name: Label for atom object
     :type name: String
     :param config: Settings from configuration files
-        (incl. atom colours and radii and global scale factor)
+        (incl. atom colours and radii)
     :type config: configparser.ConfigParser
 
     :returns: bpy object
@@ -153,7 +153,7 @@ def add_atom(position, lattice_vectors, symbol, cell_id=(0, 0, 0),
     else:
         radius = 1.0
 
-    size = radius * config.getfloat('general', 'scale_atom', fallback=1.)
+    size = radius * scale_factor
     bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3,
                                           location=cartesian_loc,
                                           size=size)
@@ -378,6 +378,7 @@ def open_mode(**options):
                                                         masses)):
             atom = add_atom(position, lattice_vectors, symbol,
                             cell_id=cell_id,
+                            scale_factor=opts.get('scale_atom', 1.),
                             name='{0}_{1}_{2}{3}{4}'.format(
                                 atom_index, symbol, *cell_id_tuple),
                             config=opts.config)
