@@ -265,9 +265,15 @@ def open_mode(**options):
     :type camera_rot: float
     :param config: Settings from configuration files
     :type config: configparser.ConfigParser
-    :param do_mass_weighting: Weight eigenvectors by mass.
-        This is not usually required.
-    :type do_mass_weighting: bool
+    :param mass_weighting: Weight eigenvectors by mass.
+        This has usually already been done when generating the .ascii file,
+        in which case the default value of 0 is acceptable.
+        A value of 1 corresponds to the formally correct mass scaling of m^-0.5
+        for non-weighted eigenvectors.
+        A value of -1 will REMOVE existing mass-weighting.
+        In-between values may be useful for re-scaling to see the range of
+        movements in a system, but are not physically meaningful.
+    :type mass_weighting: float
     :param end_frame: The ending frame number of the rendered Animation
         (default=start_frame+n_frames-1)
     :type end_frame: int or None
@@ -336,8 +342,10 @@ def open_mode(**options):
     else:
         raise Exception('No .ascii file provided')
 
-    if opts.get('do_mass_weighting', False):
-        masses = [float(opts.config['masses'][symbol]) for symbol in symbols]
+    if opts.get('mass_weighting', 0):
+        f = opts.get('mass_weighting', 1)
+        masses = [float(opts.config['masses'][symbol])**f
+                      for symbol in symbols]
     else:
         masses = [1 for symbol in symbols]
 
