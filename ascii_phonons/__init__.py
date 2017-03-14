@@ -81,6 +81,8 @@ class Opts(object):
             'offset_box',
             'supercell')
 
+        # All other keys are strings
+
     def get(self, key, fallback):
         """Get parameter, prioritising named options over config file
 
@@ -234,9 +236,6 @@ def montage_static(**options):
         if not opts.get(param, False):
             options[param] = default
 
-    call_args = ['montage', '-font', 'Helvetica', '-pointsize', '18']
-    call_args.extend(opts.get('montage_args', '').split())
-
     # The output filename is used as the root for temporary images
     # These are requested as "preview" images to reduce rescaling
     output_basename = opts.get('output_file', 'phonon')
@@ -292,7 +291,10 @@ def _montage_static_batch(mode_data, opts, mode=0, filename='montage.png'):
     :type filename: str
 
     """
-    call_args = ['montage', '-font', 'Helvetica', '-pointsize', '18']
+    font = opts.get('montage_font', 'Helvetica')
+    pointsize = opts.get('montage_pointsize', '18')
+    call_args = ['montage', '-font', font, '-pointsize', pointsize]
+
     for index, (qpt, freq) in enumerate(mode_data):
         opts.options.update({'preview': '.'.join((filename, str(index)))})
         opts.options.update({'mode_index': index + mode})

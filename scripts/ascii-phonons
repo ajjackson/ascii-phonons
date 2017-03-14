@@ -55,6 +55,12 @@ if __name__ == "__main__":
                         "e.g. '-tile {cols}x{rows}'")
     parser.add_argument("--montage_decimals", type=int,
                         help="Decimal places for the frequency in montage")
+    parser.add_argument("--montage_font", type=str,
+                        help="Font for frequency annotations: "
+                             "see list of allowed fonts with \n\t"
+                             "``convert -list font``")
+    parser.add_argument("--montage_pointsize", type=str,
+                        help="Size for frequency annotations")
     parser.add_argument("--ncol", type=int,
                         help="Columns in tiled display")
     parser.add_argument("--nrow", type=int,
