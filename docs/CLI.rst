@@ -115,10 +115,15 @@ The list of accepted arguments may also be viewed by calling with the "help" arg
 |                                   |                                          |
 |                                   |                                          |
 +-----------------------------------+------------------------------------------+
-| ``--do_mass_weighting``           | Apply mass weighting to atom movements.  |
-|                                   | This has usually already been done in the|
-|                                   | construction of the .ascii file, and     |
-|                                   | should not be repeated.                  |
+| ``--mass_weighting``              | Rescale the atom movements by mass.      |
+|                                   | The physically-correct factor of         |
+|                                   | 1/sqrt(m) has usually already been done  |
+|                                   | in the construction of the .ascii file.  |
+|                                   | A value of 0. will make no change;       |
+|                                   | a value of 1. will apply mass weighting; |
+|                                   | a value of -1. will *remove* mass        |
+|                                   | weighting. Other values will apply       |
+|                                   | nonlinear scaling to taste.              |
 +-----------------------------------+------------------------------------------+
 | ``--orthographic``                | Use orthographic projection              |
 |                                   | (i.e. no perspective effect)             |
