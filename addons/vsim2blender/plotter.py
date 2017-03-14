@@ -218,7 +218,7 @@ def animate_atom_vibs(atom, qpt, d_vector,
     :type mass: float
     """
 
-    r = atom.location
+    r = atom.location.copy()
 
     if type(end_frame) != int:
         end_frame = start_frame + n_frames - 1
