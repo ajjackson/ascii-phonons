@@ -15,6 +15,8 @@ The changelog format is inspired by [keep-a-changelog](https://github.com/olivie
 
 ## [Unreleased]
 
+## [1.1.0] - 2017-03-14
+
 ### Additions
     - Orthographic projection supported in CLI and GUI
     - Arrow normalisation between modes by max arrow length
@@ -64,7 +66,8 @@ The changelog format is inspired by [keep-a-changelog](https://github.com/olivie
     Initial Release: first "usable" version
     
 
-[Unreleased]: https://github.com/ajjackson/ascii-phonons/compare/1.0.0...master
+[Unreleased]: https://github.com/ajjackson/ascii-phonons/compare/1.0.1...master
+[1.1.0]: https://github.com/ajjackson/ascii-phonons/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/ajjackson/ascii-phonons/compare/0.5.0...1.0.0
 [0.5.0]: https://github.com/ajjackson/ascii-phonons/compare/0.3.0...0.5.0
 [0.3.0]: https://github.com/ajjackson/ascii-phonons/compare/0.2.2...0.3.0

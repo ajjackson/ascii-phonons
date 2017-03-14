@@ -16,7 +16,7 @@ bl_info = {
     "name": "ascii phonons",
     "description": "Generate phonon mode visualisations from ASCII input files",
     "author": "Adam J. Jackson",
-    "version": (1,0,0),
+    "version": (1, 1, 0),
     "blender": (2, 70, 0),
     "location": "",
     "category": "Import-Export",
