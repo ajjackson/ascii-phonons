@@ -20,6 +20,7 @@ The changelog format is inspired by [keep-a-changelog](https://github.com/olivie
 ### Additions
     - Orthographic projection supported in CLI and GUI
     - Arrow normalisation between modes by max arrow length
+    - Nonlinear mass rescaling option
 
 ### Changes
     - Modified arrow scaling algorithm, defaults

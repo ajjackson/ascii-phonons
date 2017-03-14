@@ -104,7 +104,6 @@ class Opts(object):
             self.config = read_config()
 
         self.bool_keys = (
-            'do_mass_weighting',
             'gif',
             'gui',
             'montage',
@@ -117,6 +116,7 @@ class Opts(object):
         self.float_keys = (
             'box_thickness',
             'camera_rot',
+            'mass_weighting',
             'outline_thickness',
             'scale_arrow',
             'scale_atom',
