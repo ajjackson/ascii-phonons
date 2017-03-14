@@ -368,6 +368,9 @@ def open_mode(**options):
     max_vector = 0
     arrow_objects = []
 
+    mass_weighting = opts.get('mass_weighting', 0.)
+    assert type(mass_weighting) == float
+
     for cell_id_tuple in itertools.product(range(supercell[0]),
                                            range(supercell[1]),
                                            range(supercell[2])):
@@ -400,7 +403,7 @@ def open_mode(**options):
             if vectors:
                 arrow_vector = vector_with_phase(atom, qpt_cartesian,
                                                  displacement_vector)
-                max_vector = max(max_vector, arrow_vector.length)
+                scale = arrow_vector.length
                 loc = absolute_position(position,
                                         lattice_vectors=lattice_vectors,
                                         cell_id=cell_id)
@@ -409,7 +412,8 @@ def open_mode(**options):
                     add_arrow(loc=loc,
                               mass=mass,
                               rot_euler=vector_to_euler(arrow_vector),
-                              scale=arrow_vector.length))
+                              scale=scale))
+
     if vectors:
         col = str2list(opts.config.get('colours', 'arrow',
                        fallback='0. 0. 0.'))
@@ -417,13 +421,16 @@ def open_mode(**options):
 
     # Rescaling; either by clamping max or accounting for cell size
     if vectors and normalise_vectors:
-        scale = opts.get('scale_arrow', 1.) / max_vector
+        master_scale = opts.get('scale_arrow', 1.)
+        # Compare first element of object scales; they should be isotropic!
+        max_length = max((arrow.scale[0] for arrow in arrow_objects))
         for arrow in arrow_objects:
-            arrow.scale *= scale
+            arrow.scale *= master_scale / max_length
+
     elif vectors:
-        scale = opts.get('scale_arrow', 1.) * len(positions)
+        master_scale = opts.get('scale_arrow', 1.) * len(positions)
         for arrow in arrow_objects:
-            arrow.scale *= scale
+            arrow.scale *= master_scale
 
     # Position camera and colour world. Note that cameras as objects and
     # cameras as 'cameras' have different attributes, so need to look up

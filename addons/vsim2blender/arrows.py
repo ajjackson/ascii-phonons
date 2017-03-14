@@ -25,7 +25,7 @@ def add_arrow(loc=[0,0,0], rot_euler=False, scale=1, mass=1):
         arrow.rotation_mode='XYZ'
         arrow.rotation_euler=rot_euler
     scale = scale * mass**-.5  # Inverse square root of mass gives a physical relative size of motions
-    arrow.scale = [scale]*3 # Scale uniformly to reflect magnitude
+    arrow.scale = [scale] * 3 # Scalar to 3 elements: scale uniformly
     arrow.name = 'Arrow.{0}'.format(time.time()) # This is a hack to give arrows unique names. There should be a better solution.
     return arrow
 
