@@ -17,9 +17,9 @@ import vsim2blender.camera as camera
 script_directory = os.path.dirname(__file__)
 
 
-def draw_bounding_box(cell, offset=(0, 0, 0)):
+def draw_bounding_box(cell, offset=(0, 0, 0), colour=(1, 1, 1)):
     """
-    Draw unit cell bounding box
+    Draw unit cell bounding box in new Group "Box"
 
     :param cell: Lattice vectors
     :type cell: 3-tuple of 3-Vectors
@@ -40,11 +40,23 @@ def draw_bounding_box(cell, offset=(0, 0, 0)):
     box_mesh.from_pydata(verts, [], faces)
     box_mesh.update(calc_edges=True)
 
+    # Drop in and out of mesh editing mode to fix up normals
+    fix_normals(box_object)
+
     box_material = bpy.data.materials.new("Bounding Box")
     box_object.data.materials.append(box_material)
     box_material.type = "WIRE"
-    box_material.diffuse_color = (0, 0, 0)
+    box_material.diffuse_color = colour
     box_material.use_shadeless = True
+
+    bpy.ops.group.create(name="Box")
+    bpy.ops.object.group_link(group="Box")
+
+def fix_normals(bpy_object):
+    bpy.context.scene.objects.active = bpy_object
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.normals_make_consistent()
+    bpy.ops.object.mode_set(mode='OBJECT')
 
 
 def init_material(symbol, col=False, shadeless=True):
@@ -356,7 +368,9 @@ def open_mode(**options):
     if (opts.get('show_box', True)):
         bbox_offset = opts.get('offset_box', (0, 0, 0))
         bbox_offset = Vector(bbox_offset)
-        draw_bounding_box(lattice_vectors, offset=bbox_offset)
+        draw_bounding_box(lattice_vectors, offset=bbox_offset,
+                          colour=str2list((opts.config.get('colours', 'box',
+                                           fallback='1. 1. 1.'))))
 
     # Draw atoms after checking config
     mode_index = opts.get('mode_index', 0)
@@ -534,31 +548,6 @@ def setup_render_freestyle(**options):
 
     renderlayer = bpy.context.scene.render.layers['RenderLayer']
 
-    if opts.get('show_box', True):
-        # Wireframe box and add to "Group" for exclusion from outlining
-        # Freestyle doesn't work with wireframes
-        bpy.data.materials['Bounding Box'].type = 'SURFACE'
-        bpy.data.objects['Bounding Box'].select = True
-
-        bpy.ops.object.modifier_add(type='SUBSURF')
-        mesh_to_wireframe(bpy.data.objects['Bounding Box'])
-        mark_edges(bpy.data.objects['Bounding Box'])
-        # bpy.ops.object.group_add()
-
-        # Bounding box line settings
-        bpy.ops.scene.freestyle_lineset_add()
-        boxlines = renderlayer.freestyle_settings.linesets.active
-        boxlinestyle = boxlines.linestyle
-        boxlinestyle.thickness = opts.get('box_thickness', 5)
-        boxlinestyle.color = str2list(opts.config.get('colours',
-                                                      'box',
-                                                      fallback='1. 1. 1.'))
-        # Bounding box tracer ignores everything but Freestyle marked edges
-        boxlines.select_silhouette = False
-        boxlines.select_border = False
-        boxlines.select_crease = False
-        boxlines.select_edge_mark = True
-
     # Outline settings
     bpy.ops.scene.freestyle_lineset_add()
     atomlines = renderlayer.freestyle_settings.linesets.active
@@ -568,17 +557,90 @@ def setup_render_freestyle(**options):
                                                    'outline',
                                                    fallback='0. 0. 0.'))
 
+    # Set up render layer and compositing for bounding box
+    if opts.get('show_box', True):
+        # Wireframe box and add to "Group" for exclusion from outlining
+        # Freestyle doesn't work with wireframes
+        bpy.data.materials['Bounding Box'].type = 'SURFACE'
+        # bpy.data.objects['Bounding Box'].select = True
+
+        bpy.ops.object.modifier_add(type='SUBSURF')
+        mesh_to_wireframe(bpy.data.objects['Bounding Box'],
+                          thickness=opts.get('box_thickness', 1))
+        # mark_edges(bpy.data.objects['Bounding Box'])
+
+        # bpy.ops.object.group_add()
+
+        # # Bounding box line settings
+        # bpy.ops.scene.freestyle_lineset_add()
+        # boxlines = renderlayer.freestyle_settings.linesets.active
+        # boxlinestyle = boxlines.linestyle
+        # boxlinestyle.thickness = opts.get('box_thickness', 5)
+        # boxlinestyle.color = str2list(opts.config.get('colours',
+        #                                               'box',
+        #                                               fallback='1. 1. 1.'))
+
+        # # Bounding box tracer ignores everything but Freestyle marked edges
+        # boxlines.select_silhouette = False
+        # boxlines.select_border = False
+        # boxlines.select_crease = False
+        # boxlines.select_edge_mark = True
+
+
+        bpy.ops.scene.render_layer_add()
+        box_layer = bpy.context.scene.render.layers.active
+        box_layer.name = "BoxLayer"
+
+        bpy.context.scene.layers[1] = True        
+        bpy.context.scene.render.layers["RenderLayer"].layers[0] = True
+        bpy.context.scene.render.layers["RenderLayer"].layers[1] = False
+
+        bpy.context.scene.render.layers["BoxLayer"].layers[0] = False
+        bpy.context.scene.render.layers["BoxLayer"].layers[1] = True
+
+        bpy.data.objects['Bounding Box'].layers[1] = True
+        bpy.data.objects['Bounding Box'].layers[0] = False
+
+        # Compositing setup; clear defaults and build tree
+        # The "location" settings are not strictly necessary but make
+        # editing in the Blender GUI more comfortable
+        bpy.context.scene.render.use_compositing = True
+        bpy.context.scene.use_nodes = True
+        tree = bpy.context.scene.node_tree
+        for node in tree.nodes:
+            tree.nodes.remove(node)
+        rlayer1 = tree.nodes.new(type='CompositorNodeRLayers')
+        rlayer1.location = (0, 500)        
+        rlayer2 = tree.nodes.new(type='CompositorNodeRLayers')
+        rlayer2.layer = 'BoxLayer'
+        zcombine = tree.nodes.new('CompositorNodeZcombine')
+        zcombine.location = (500, 0)
+
+        tree.links.new(rlayer1.outputs[0], zcombine.inputs[0])
+        tree.links.new(rlayer1.outputs[2], zcombine.inputs[1])
+
+        tree.links.new(rlayer2.outputs[0], zcombine.inputs[2])
+        tree.links.new(rlayer2.outputs[2], zcombine.inputs[3])
+
+        composite = tree.nodes.new('CompositorNodeComposite')
+        composite.location = (400, 400)
+        tree.links.new(zcombine.outputs[0], composite.inputs[0])
+
 
 def str2list(string):
     return [float(x) for x in string.split()]
 
 
-def mesh_to_wireframe(bpy_object):
+def mesh_to_wireframe(bpy_object, thickness=1, apply_modifiers=False):
     """
     Create and apply a wireframe modifier to a mesh object
 
     :param bpy_object: Simple mesh object to convert to a wireframe
     :type bpy_object: Blender object
+    :param thickness: Thickness of wireframe expressed in 100 * data units
+    :type thickness: float
+    :param apply_modifiers: Convert wireframe to simple mesh
+    :type apply_modifiers: bool
 
     :returns wire_object: Original object with applied wireframe
     :rtype wire_object: Blender object
@@ -586,7 +648,10 @@ def mesh_to_wireframe(bpy_object):
     bpy.context.scene.objects.active = bpy_object
     bpy_object.select = True
     bpy.ops.object.modifier_add(type='WIREFRAME')
-    bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Wireframe")
+    bpy_object.modifiers['Wireframe'].thickness = thickness / 10.0
+
+    if apply_modifiers:
+        bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Wireframe")
     return bpy_object
 
 
