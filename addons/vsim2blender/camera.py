@@ -80,9 +80,11 @@ def setup_camera(lattice_vectors, field_of_view=0.5,
     if orthographic:
         bpy.data.cameras[camera.name].type = 'ORTHO'
         bpy.data.cameras[camera.name].ortho_scale = camera_distance/2.5
+        # Limit clipping to avoid nasty glitches in orthographic mode
+        bpy.data.cameras[camera.name].clip_end = 10000
     else:
         bpy.data.cameras[camera.name].angle = field_of_view
-    bpy.data.cameras[camera.name].clip_end = 1e8
+        bpy.data.cameras[camera.name].clip_end = 1e8
 
     # Use tracking to point camera at center of structure
     bpy.ops.object.constraint_add(type='TRACK_TO')

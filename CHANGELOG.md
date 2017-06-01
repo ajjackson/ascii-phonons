@@ -17,6 +17,7 @@ The changelog format is inspired by [keep-a-changelog](https://github.com/olivie
 
 ### Fixes
     - Orthographic projection flag *actually* enabled in CLI
+    - Camera clipping causing problems in orthographic view, reduce draw distance.
 
 ## [1.1.0] - 2017-03-14
 
