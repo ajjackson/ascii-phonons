@@ -62,6 +62,9 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output_file",
                         help="Render to output. GUI will not open for further "
                              "editing unless -g (--gui) flag is used")
+    parser.add_argument("--orthographic", action="store_true",
+                        help="Use orthographic projection "
+                             "(i.e. no perspective)")
     parser.add_argument("--start_frame", type=int,
                         help="Starting frame number for the animation")
     parser.add_argument("--scale_arrow", type=float,
