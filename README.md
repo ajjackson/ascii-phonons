@@ -84,7 +84,7 @@ To use the resulting file with the CLI, use the `--config` flag.
 
     ascii-phonons /path/to/my/phonons.ascii --config my_amazing.conf
     
-Note that information about input and output files is containing within the .conf file, but that **scripts/ascii-phonons** always requires a .ascii file to be provided at the command line.
+Note that information about input and output files is contained within the .conf file, but that **scripts/ascii-phonons** always requires a .ascii file to be provided at the command line.
 
 ## Implementation details
 
@@ -95,7 +95,7 @@ The eigenvectors may be scaled by the square root of the relative atomic mass; t
 ## Acknowledgements
 
 Work on this package began while [ajjackon](https://github.com/ajjackson) was a PhD student funded by [EPSRC](https://www.epsrc.ac.uk/) through the [Center for Sustainable Chemical Technologies](http://www.bath.ac.uk/csct) (grant no. [EP/G03768X/1](http://gow.epsrc.ac.uk/NGBOViewGrant.aspx?GrantRef=EP/G03768X/1)) at the University of Bath.
-Further work to fix bugs and improve the documentation and useability has taken place as a Research Assistant the same [research group](https://wmd-group.github.io), while funded by the [ERC](https://erc.europa.eu) ([project 277757](http://cordis.europa.eu/project/rcn/100807_en.html)).
+Further work to fix bugs and improve the documentation and useability has taken place as a Research Assistant in the same [research group](https://wmd-group.github.io), while funded by the [ERC](https://erc.europa.eu) ([project 277757](http://cordis.europa.eu/project/rcn/100807_en.html)).
 
 ## License
 
