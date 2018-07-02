@@ -1,0 +1,14 @@
+cff-version: 1.0.3
+message: If you use this software, please consider citing it as below.
+authors:
+  - family-names: Jackson
+    given-names: Adam J.
+    orcid: https://orcid.org/0000-0001-5272-6530
+repository-code: https://github.com/ajjackson/ascii-phonons
+title: ascii-phonons
+version: 1.0.1
+doi: 10.5281/zenodo.1303300
+date-released: 2018-07-2
+programming-languages:
+  - python
+license: GPL-3.0-or-later

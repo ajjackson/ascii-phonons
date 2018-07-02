@@ -2,6 +2,10 @@
 
 Visualisation of crystal vibrations with Blender.
 
+
+
+[![DOI](https://zenodo.org/badge/39636105.svg)](https://zenodo.org/badge/latestdoi/39636105)
+
 [![Documentation Status](https://readthedocs.org/projects/ascii-phonons/badge/?version=latest)](http://ascii-phonons.readthedocs.org/en/latest/?badge=latest)
 
 Visualisation is a powerful tool for the study of vibrations in the solid state.
