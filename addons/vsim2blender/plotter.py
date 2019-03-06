@@ -538,12 +538,8 @@ def setup_render_freestyle(**options):
         # Wireframe box and add to "Group" for exclusion from outlining
         # Freestyle doesn't work with wireframes
         bpy.data.materials['Bounding Box'].type = 'SURFACE'
-        bpy.data.objects['Bounding Box'].select = True
-
-        bpy.ops.object.modifier_add(type='SUBSURF')
         mesh_to_wireframe(bpy.data.objects['Bounding Box'])
         mark_edges(bpy.data.objects['Bounding Box'])
-        # bpy.ops.object.group_add()
 
         # Bounding box line settings
         bpy.ops.scene.freestyle_lineset_add()
@@ -553,6 +549,7 @@ def setup_render_freestyle(**options):
         boxlinestyle.color = str2list(opts.config.get('colours',
                                                       'box',
                                                       fallback='1. 1. 1.'))
+
         # Bounding box tracer ignores everything but Freestyle marked edges
         boxlines.select_silhouette = False
         boxlines.select_border = False
